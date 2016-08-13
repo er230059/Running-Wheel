@@ -1,0 +1,19 @@
+{
+	"name": "Running-Wheel",
+	"version": "0.0.1",
+	"description": "Running wheel for rat training",
+	"engines" : { "node" : ">=0.10 <0.12" },
+	"dependencies": {
+		"express": "*",
+		"socket.io": "*",
+		"serialport": "*",
+		"i2c": "0.1.8"
+	},
+	"main": "app.js",
+	"author": [
+		{
+			"name": "Lang-Chuan Huang",
+			"email": "er230059@gmail.com"
+		}
+	]
+}
