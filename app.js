@@ -10,14 +10,25 @@ var ppgData;
 var IR = [0, 0, 0, 0];
 var speedFeedback = 0;
 
-var speedValue = 0;
 var speedDAC = new i2c(0x62, {device: '/dev/i2c-1'});
 
-speedDAC.write([(0x0F & (speedValue >> 8)), (0xFF & speedValue)], function (err) {
-	if(err) {
-		console.log('DAC write error: ' + err);
+setSpeed(0);
+
+function setSpeed(speed) {
+	var adcValue;
+	if(speed >= 17) {
+		adcValue = speed * 60.77;
+	} else if (speed >= 10) {
+		adcValue = speed * 62.5;
+	} else {
+		adcValue = speed * 55 + 93;
 	}
-});
+	speedDAC.write([(0x0F & (adcValue >> 8)), (0xFF & adcValue)], function (err) {
+		if(err) {
+			console.log('DAC write error: ' + err);
+		}
+	});
+}
 
 var ppgPort = new SerialPort('/dev/ttyUSB0', {
 	baudRate: 230400
@@ -106,7 +117,7 @@ sensorPort.on('data', function (data) {
 	}
 });
 
-app.use(express.static(__dirname));
+app.use(express.static(__dirname + '/static'));
 
 app.use(function (req, res, next) {
 	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
