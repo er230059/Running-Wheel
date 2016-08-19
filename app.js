@@ -3,12 +3,14 @@ var express = require('express');
 var app = express();
 var server = http.Server(app);
 var io = require('socket.io')(server);
+var async = require('async');
 var i2c = require('i2c');
 var SerialPort = require('serialport');
 
 var ppgData;
 var IR = [0, 0, 0, 0];
 var speedFeedback = 0;
+var speedPastSet = 0;
 
 var speedDAC = new i2c(0x62, {device: '/dev/i2c-1'});
 
@@ -27,7 +29,39 @@ function setSpeed(speed) {
 		if(err) {
 			console.log('DAC write error: ' + err);
 		}
+		speedPastSet = speed;
 	});
+}
+
+function setSpeedEase(speed, acceleration) {
+	var speedPastSetTmp = speedPastSet;
+	var speedDiff = speed - speedPastSetTmp;
+	if(speedDiff > 2) {
+		var a;
+		if(acceleration == 0) {
+			a = 15;
+		} else if (acceleration == 1) {
+			a = 10
+		} else if (acceleration == 2) {
+			a = 5;
+		}
+		var i = 0;
+		async.whilst(
+			function() { return i < a; },
+			function(callback) {
+				i++;
+				setSpeed(Math.round((speedDiff * (1 - Math.exp((-(i*5) / a))) + speedPastSetTmp) * 10) / 10);
+				setTimeout(function() {
+					callback(null, i);
+				}, 500);
+			},
+			function (err, n) {
+				setSpeed(speed);
+			}
+		);
+	} else {
+		setSpeed(speed);
+	}
 }
 
 var ppgPort = new SerialPort('/dev/ttyUSB0', {
