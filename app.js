@@ -59,6 +59,29 @@ function setSpeedEase(speed, acceleration) {
 				setSpeed(speed);
 			}
 		);
+	} else if (speedDiff < 2) {
+		var a;
+		if(acceleration == 0) {
+			a = 15;
+		} else if (acceleration == 1) {
+			a = 10
+		} else if (acceleration == 2) {
+			a = 5;
+		}
+		var i = 0;
+		async.whilst(
+			function() { return i < a; },
+			function(callback) {
+				i++;
+				setSpeed(Math.round((Math.abs(speedDiff) * (Math.exp((-(i*5) / a))) + speed) * 10) / 10);
+				setTimeout(function() {
+					callback(null, i);
+				}, 500);
+			},
+			function (err, n) {
+				setSpeed(speed);
+			}
+		);
 	} else {
 		setSpeed(speed);
 	}
