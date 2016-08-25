@@ -3,89 +3,16 @@ var express = require('express');
 var app = express();
 var server = http.Server(app);
 var io = require('socket.io')(server);
-var async = require('async');
-var i2c = require('i2c');
 var SerialPort = require('serialport');
+var motor = require('./motorcontrol');
 
 var ppgData;
 var IR = [0, 0, 0, 0];
 var speedFeedback = 0;
-var speedPastSet = 0;
 
-var speedDAC = new i2c(0x62, {device: '/dev/i2c-1'});
-
-setSpeed(0);
-
-function setSpeed(speed) {
-	var adcValue;
-	if(speed >= 17) {
-		adcValue = speed * 60.77;
-	} else if (speed >= 10) {
-		adcValue = speed * 62.5;
-	} else {
-		adcValue = speed * 55 + 93;
-	}
-	speedDAC.write([(0x0F & (adcValue >> 8)), (0xFF & adcValue)], function (err) {
-		if(err) {
-			console.log('DAC write error: ' + err);
-		}
-		speedPastSet = speed;
-	});
-}
-
-function setSpeedEase(speed, acceleration) {
-	var speedPastSetTmp = speedPastSet;
-	var speedDiff = speed - speedPastSetTmp;
-	if(speedDiff > 2) {
-		var a;
-		if(acceleration == 0) {
-			a = 15;
-		} else if (acceleration == 1) {
-			a = 10
-		} else if (acceleration == 2) {
-			a = 5;
-		}
-		var i = 0;
-		async.whilst(
-			function() { return i < a; },
-			function(callback) {
-				i++;
-				setSpeed(Math.round((speedDiff * (1 - Math.exp((-(i*5) / a))) + speedPastSetTmp) * 10) / 10);
-				setTimeout(function() {
-					callback(null, i);
-				}, 500);
-			},
-			function (err, n) {
-				setSpeed(speed);
-			}
-		);
-	} else if (speedDiff < 2) {
-		var a;
-		if(acceleration == 0) {
-			a = 15;
-		} else if (acceleration == 1) {
-			a = 10
-		} else if (acceleration == 2) {
-			a = 5;
-		}
-		var i = 0;
-		async.whilst(
-			function() { return i < a; },
-			function(callback) {
-				i++;
-				setSpeed(Math.round((Math.abs(speedDiff) * (Math.exp((-(i*5) / a))) + speed) * 10) / 10);
-				setTimeout(function() {
-					callback(null, i);
-				}, 500);
-			},
-			function (err, n) {
-				setSpeed(speed);
-			}
-		);
-	} else {
-		setSpeed(speed);
-	}
-}
+motor.setSpeed(0, function (err) {
+	if(err) console.error(err);
+});
 
 var ppgPort = new SerialPort('/dev/ttyUSB0', {
 	baudRate: 230400
@@ -95,21 +22,21 @@ var sensorPort = new SerialPort('/dev/ttyO4', {
 	baudRate: 9600
 });
 
-ppgPort.on('open', function() {
-	ppgPort.flush(function(err) {
+ppgPort.on('open', function () {
+	ppgPort.flush(function (err) {
 		if (err) {
-			console.log('PPG flush wrror: ', err);
+			console.error(err);
 		}
-		ppgPort.write([0x30, 0x20, 0x05, 0x64, 0x01, 0x01, 0x8B], function(err) {
+		ppgPort.write([0x30, 0x20, 0x05, 0x64, 0x01, 0x01, 0x8B], function (err) {
 			if (err) {
-				console.log('PPG write wrror: ', err);
+				console.error(err);
 			}
 		});
 	});
 });
 
-ppgPort.on('error', function(err) {
-	console.log('PPG error: ' + err);
+ppgPort.on('error', function (err) {
+	console.error(err);
 })
 
 var ppgBuffer = [];
@@ -145,11 +72,11 @@ ppgPort.on('data', function (data) {
 	}
 });
 
-sensorPort.on('open', function() {
+sensorPort.on('open', function () {
 });
 
-sensorPort.on('error', function(err) {
-	console.log('Sensor module error: ' + err);
+sensorPort.on('error', function (err) {
+	console.error(err);
 })
 
 var sensorBuffer = [];
