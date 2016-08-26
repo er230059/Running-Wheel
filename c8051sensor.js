@@ -27,7 +27,9 @@ sensorPort.on('data', function (data) {
 	}
 	if(startPos != -1 && (sensorBuffer.length - startPos) >= 5) {
 		var buf = new Buffer([sensorBuffer[startPos + 2], sensorBuffer[startPos + 3]]);
-		speed = Math.round(buf.readUInt16BE(0) * 0.03685 * 100) / 100;
+		speed = buf.readUInt16BE(0) * 0.03685;
+		if(speed >= 20) speed += speed / 110;
+		speed = Math.round(speed * 100) / 100
 		var bIR = ('000' + sensorBuffer[startPos + 4].toString(2)).slice(-4);
 		sensorData = {
 			"IR": bIR.split('').reverse(),

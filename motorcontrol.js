@@ -7,10 +7,10 @@ var speedPastSet = 0;
 
 function setSpeed(speed, callback) {
 	var adcValue;
-	if(speed >= 17) {
-		adcValue = speed * 60.77;
+	if(speed >= 20) {
+		adcValue = speed * 62.5 + 10;
 	} else if (speed >= 10) {
-		adcValue = speed * 62.5;
+		adcValue = speed * 62.5 + 30;
 	} else {
 		adcValue = speed * 55 + 93;
 	}
@@ -37,7 +37,7 @@ function setSpeedEase(speed, acceleration, done) {
 		a = 5;
 	}
 
-	if(Math.abs(speedDiff) > 2) {
+	if(Math.abs(speedDiff) > 1) {
 		var i = 0;
 		async.whilst(
 			function() { return i < a; },
