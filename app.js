@@ -6,7 +6,7 @@ var io = require('socket.io')(server);
 var SerialPort = require('serialport');
 var motor = require('./motorcontrol');
 
-var ppgData;
+var ppgData = {};
 var IR = [0, 0, 0, 0];
 var speedFeedback = 0;
 
@@ -59,7 +59,6 @@ ppgPort.on('data', function (data) {
 		var ppg10Buf = new Buffer([ppgBuffer[startPos + 16], ppgBuffer[startPos + 17]]);
 		var ppg100Buf = new Buffer([ppgBuffer[startPos + 18], ppgBuffer[startPos + 19]]);
 		ppgData = {
-			'sn': ppgBuffer[startPos + 3],
 			'x': xAxisBuf.readUInt16BE(0),
 			'y': yAxisBuf.readUInt16BE(0),
 			'z': zAxisBuf.readUInt16BE(0),
@@ -68,7 +67,6 @@ ppgPort.on('data', function (data) {
 			'ppgx100': ppg100Buf.readUInt16BE(0)
 		};
 		ppgBuffer.splice(0, startPos + 21);
-		console.log('PPG data: ' + JSON.stringify(ppgData));
 	}
 });
 
@@ -97,9 +95,28 @@ sensorPort.on('data', function (data) {
 		var bIR = ('000' + sensorBuffer[startPos + 4].toString(2)).slice(-4);
 		IR = bIR.split('').reverse();
 		sensorBuffer.splice(0,startPos + 5);
-		console.log('IR: ' + IR + ' Speed: ' + speedFeedback);
 	}
 });
+
+setInterval(function () {
+	var json = {
+		"speed": speedFeedback,
+		"IR": IR,
+		"IR_total": [1, 1, 1, 1],
+		"g_sensor": {
+			"x": ppgData.x,
+			"y": ppgData.y,
+			"z": ppgData.z
+		},
+		"ppg": {
+			"x1": ppgData.ppg,
+			"x10": ppgData.ppgx10,
+			"x100": ppgData.ppgx100
+		},
+		"timestamp": Date.now()
+	};
+	io.emit('sensor_data', JSON.stringify(json));
+}, 10);
 
 app.use(express.static(__dirname + '/static'));
 
