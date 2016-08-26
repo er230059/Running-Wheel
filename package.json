@@ -2,9 +2,10 @@
 	"name": "Running-Wheel",
 	"version": "0.0.1",
 	"description": "Running wheel for rat training",
-	"engines" : { "node" : ">=0.10 <0.12" },
+	"engines" : { "node" : ">=0.10 <=0.12" },
 	"dependencies": {
 		"express": "*",
+		"body-parser": "*",
 		"socket.io": "*",
 		"serialport": "*",
 		"i2c": "0.1.8"
