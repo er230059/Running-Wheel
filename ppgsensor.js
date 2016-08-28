@@ -22,7 +22,7 @@ ppgPort.on('open', function () {
 
 ppgPort.on('error', function (err) {
 	console.error(err);
-})
+});
 
 ppgPort.on('data', function (data) {
 	for(var i = 0; i < data.length; i++) {
