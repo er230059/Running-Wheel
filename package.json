@@ -4,6 +4,7 @@
 	"description": "Running wheel for rat training",
 	"engines" : { "node" : ">=0.10 <=0.12" },
 	"dependencies": {
+		"async": "*",
 		"express": "*",
 		"body-parser": "*",
 		"socket.io": "*",

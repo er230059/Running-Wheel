@@ -1,3 +1,4 @@
+var async = require('async');
 var http = require('http');
 var express = require('express');
 var app = express();
@@ -24,8 +25,13 @@ var ppg = {
 var startTime;
 var endTime;
 var currentSpeed = 0;
-var inTraining = false;
-var speedSetting = false;
+var trainingParams = {
+	"acceleration": 0,
+	"deceleration": 0,
+	"maxspeed": 0,
+	"minspeed": 0,
+	"inTraining": false
+};
 var timer;
 
 motor.setSpeed(0, function (err) {
@@ -80,6 +86,66 @@ setInterval(function () {
 	io.emit('sensor_data', JSON.stringify(json));
 }, 50);
 
+function trainingLoop () {
+	if(Date.now() >= endTime) {
+		clearInterval(timer);
+
+		var i = 0;
+		async.whilst(
+			function() { return i < Math.abs(currentSpeed / trainingParams.deceleration); },
+			function(callback) {
+				i++;
+				currentSpeed -= trainingParams.deceleration;
+				motor.setSpeed(currentSpeed, function (err) {
+					if(err) {
+						callback(err);
+					} else {
+						setTimeout(function () {
+							callback(null, i);
+						}, 200);
+					}
+				});
+			},
+			function (err, n) {
+				if(err) {
+					console.error(err);
+				} else {
+					motor.setSpeed(0, function (err) {
+						if(err) {
+							console.error(err);
+						}
+					});
+				}
+				trainingParams.inTraining = false;
+			}
+		);
+	} else {
+		if(IR[0] == 0 || (IR[1] == 0 && IR[2] == 1)) {
+			if(currentSpeed > trainingParams.minspeed) {
+				if((currentSpeed - trainingParams.minspeed) < trainingParams.deceleration) {
+					currentSpeed = trainingParams.minspeed;
+				} else {
+					currentSpeed -= trainingParams.deceleration;
+				}
+				motor.setSpeed(currentSpeed, function (err) {
+					if(err) console.error(err);
+				});
+			}
+		} else if(IR[3] == 0) {
+			if(currentSpeed < trainingParams.maxspeed) {
+				if((trainingParams.maxspeed - currentSpeed) < trainingParams.acceleration) {
+					currentSpeed = trainingParams.maxspeed;
+				} else {
+					currentSpeed += trainingParams.acceleration;
+				}
+				motor.setSpeed(currentSpeed, function (err) {
+					if(err) console.error(err);
+				});
+			}
+		}
+	}
+}
+
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/static'));
 
@@ -89,74 +155,62 @@ app.use(function (req, res, next) {
 	next();
 });
 
-app.post('/traininginit', function (request, response) {
-	var acceleration = parseInt(request.body.acceleration);
-	var deceleration = parseInt(request.body.deceleration);
-	var maxspeed = parseFloat(request.body.maxspeed);
-	var minspeed = parseFloat(request.body.minspeed);
-	var time = parseInt(request.body.time);
+app.get('/training_stop', function (request, response) {
+	if(trainingParams.inTraining) {
+		trainingParams.inTraining = false;
+		clearInterval(timer);
+	}
+	motor.setSpeed(0, function (err) {
+		if(err) console.error(err);
+	});
+});
 
-	if(inTraining) {
+app.post('/training_init', function (request, response) {
+	var time = parseInt(request.body.time);
+	trainingParams.acceleration = parseFloat(request.body.acceleration) / 5;
+	trainingParams.deceleration = parseFloat(request.body.deceleration) / 5;
+	trainingParams.maxspeed = parseFloat(request.body.maxspeed);
+	trainingParams.minspeed = parseFloat(request.body.minspeed);
+
+	if(trainingParams.inTraining) {
 
 	} else {
-		motor.setSpeedEase(maxspeed, acceleration, function (err) {
-			if(err) {
-				console.error(err);
-			} else {
-				inTraining = true;
-				startTime = Date.now();
-				endTime = time * 60 * 1000 + startTime;
-				IR_total = [0, 0, 0, 0];
-				currentSpeed = maxspeed;
-				timer = setInterval(function () {
-					if(Date.now() >= endTime) {
-						if(!speedSetting) {
-							speedSetting = true;
-							motor.setSpeedEase(0, deceleration, function (err) {
-								if(err) console.error(err);
-								speedSetting = false;
-							});
-							clearInterval(timer);
-							inTraining = false;
-						}
+		startTime = Date.now();
+		trainingParams.inTraining = true;
+		endTime = time * 60 * 1000 + startTime;
+		IR_total = [0, 0, 0, 0];
+		currentSpeed = 0;
+
+		var i = 0;
+		async.whilst(
+			function() { return (i < Math.abs(trainingParams.maxspeed / trainingParams.acceleration)) && trainingParams.inTraining; },
+			function(callback) {
+				i++;
+				currentSpeed += trainingParams.acceleration;
+				motor.setSpeed(currentSpeed, function (err) {
+					if(err) {
+						callback(err);
 					} else {
-						if(IR[0] == 0 || (IR[1] == 0 && IR[2] == 1)) {
-							if(currentSpeed > minspeed) {
-								if(!speedSetting) {
-									speedSetting = true;
-									var speedDiff = currentSpeed - minspeed;
-									if(speedDiff > 2) {
-										currentSpeed -= 2;
-									} else {
-										currentSpeed -= speedDiff
-									}
-									motor.setSpeedEase(currentSpeed, deceleration, function (err) {
-										if(err) console.error(err);
-										speedSetting = false;
-									});
-								}
-							}
-						} else if(IR[3] == 0) {
-							if(currentSpeed < maxspeed) {
-								if(!speedSetting) {
-									speedSetting = true;
-									var speedDiff = maxspeed - currentSpeed;
-									if(speedDiff > 2) {
-										currentSpeed += 2;
-									} else {
-										currentSpeed += speedDiff
-									}
-									motor.setSpeedEase(currentSpeed, acceleration, function (err) {
-										if(err) console.error(err);
-										speedSetting = false;
-									});
-								}
-							}
-						}
+						setTimeout(function () {
+							callback(null);
+						}, 200);
 					}
-				}, 100);
+				});
+			},
+			function (err, n) {
+				if(err) {
+					console.error(err);
+				} else {
+					motor.setSpeed(trainingParams.maxspeed, function (err) {
+						if(err) {
+							console.error(err);
+						} else {
+							timer = setInterval(trainingLoop, 200);
+						}
+					});
+				}
 			}
-		});
+		);
 	}
 });
 
