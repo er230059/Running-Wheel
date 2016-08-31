@@ -11,13 +11,22 @@ var ppgSensor = require('./ppgsensor');
 var IR = [1, 1, 1, 1];
 var IR_total = [0, 0, 0, 0];
 var speedFeedback;
-var g_sensor = {};
-var ppg = {};
-var inTraining = false;
+var g_sensor = {
+	"x": 0,
+	"y": 0,
+	"z": 0
+};
+var ppg = {
+	"x1": 0,
+	"x10": 0,
+	"x100": 0
+};
+var startTime;
 var endTime;
 var currentSpeed = 0;
+var inTraining = false;
+var speedSetting = false;
 var timer;
-var lock = false;
 
 motor.setSpeed(0, function (err) {
 	if(err) console.error(err);
@@ -95,16 +104,17 @@ app.post('/traininginit', function (request, response) {
 				console.error(err);
 			} else {
 				inTraining = true;
-				endTime = time * 60 * 1000 + Date.now();
+				startTime = Date.now();
+				endTime = time * 60 * 1000 + startTime;
 				IR_total = [0, 0, 0, 0];
 				currentSpeed = maxspeed;
 				timer = setInterval(function () {
 					if(Date.now() >= endTime) {
-						if(!lock) {
-							lock = true;
+						if(!speedSetting) {
+							speedSetting = true;
 							motor.setSpeedEase(0, deceleration, function (err) {
 								if(err) console.error(err);
-								lock = false;
+								speedSetting = false;
 							});
 							clearInterval(timer);
 							inTraining = false;
@@ -112,33 +122,33 @@ app.post('/traininginit', function (request, response) {
 					} else {
 						if(IR[0] == 0 || (IR[1] == 0 && IR[2] == 1)) {
 							if(currentSpeed > minspeed) {
-								if(!lock) {
-									lock = true;
+								if(!speedSetting) {
+									speedSetting = true;
 									var speedDiff = currentSpeed - minspeed;
-									if(speedDiff > 3) {
-										currentSpeed -= 3;
+									if(speedDiff > 2) {
+										currentSpeed -= 2;
 									} else {
 										currentSpeed -= speedDiff
 									}
 									motor.setSpeedEase(currentSpeed, deceleration, function (err) {
 										if(err) console.error(err);
-										lock = false;
+										speedSetting = false;
 									});
 								}
 							}
 						} else if(IR[3] == 0) {
 							if(currentSpeed < maxspeed) {
-								if(!lock) {
-									lock = true;
+								if(!speedSetting) {
+									speedSetting = true;
 									var speedDiff = maxspeed - currentSpeed;
-									if(speedDiff > 3) {
-										currentSpeed += 3;
+									if(speedDiff > 2) {
+										currentSpeed += 2;
 									} else {
 										currentSpeed += speedDiff
 									}
 									motor.setSpeedEase(currentSpeed, acceleration, function (err) {
 										if(err) console.error(err);
-										lock = false;
+										speedSetting = false;
 									});
 								}
 							}

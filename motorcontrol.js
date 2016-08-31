@@ -24,64 +24,45 @@ function setSpeed(speed, callback) {
 	});
 }
 
-function setSpeedEase(speed, acceleration, done) {
-	var speedPastSetTmp = speedPastSet;
+function setSpeedEase(speed, a, done) {
 	var speedDiff = speed - speedPastSetTmp;
+	var speedToSet = speedPastSetTmp;;
 	var a;
 
-	if(acceleration == 0) {
-		a = 15;
-	} else if (acceleration == 1) {
-		a = 10
-	} else if (acceleration == 2) {
-		a = 5;
-	}
-
-	if(Math.abs(speedDiff) > 1) {
-		var i = 0;
-		async.whilst(
-			function() { return i < a; },
-			function(callback) {
-				var speedToSet;
-				i++;
-				if (speedDiff > 2) {
-					speedToSet = Math.round((speedDiff * (1 - Math.exp((-(i*5) / a))) + speedPastSetTmp) * 10) / 10;
-				} else if (speedDiff < 2) {
-					speedToSet = Math.round((Math.abs(speedDiff) * (Math.exp((-(i*5) / a))) + speed) * 10) / 10;
-				}
-				setSpeed(speedToSet, function (err) {
-					if(err) {
-						callback(err);
-					} else {
-						setTimeout(function () {
-							callback(null, i);
-						}, 400);
-					}
-				});
-			},
-			function (err, n) {
-				if(err) {
-					done(err);
-				} else {
-					setSpeed(speed, function (err) {
-						if(err) {
-							done(err);
-						} else {
-							done();
-						}
-					});
-				}
+	var i = 0;
+	async.whilst(
+		function() { return i < Math.abs(speedDiff / a); },
+		function(callback) {
+			i++;
+			if (speedDiff > 0) {
+				speedToSet += a;
+			} else if (speedDiff < 0) {
+				speedToSet -= a;
 			}
-		);
-	} else {
-		setSpeed(speed, function (err) {
+			setSpeed(speedToSet, function (err) {
+				if(err) {
+					callback(err);
+				} else {
+					setTimeout(function () {
+						callback(null, i);
+					}, 500);
+				}
+			});
+		},
+		function (err, n) {
 			if(err) {
 				done(err);
 			} else {
-				done();
+				setSpeed(speed, function (err) {
+					if(err) {
+						done(err);
+					} else {
+						done();
+					}
+				});
 			}
-		});
-	}
+		}
+	);
 }
 
 module.exports = {
