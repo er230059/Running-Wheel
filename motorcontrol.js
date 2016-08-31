@@ -25,8 +25,8 @@ function setSpeed(speed, callback) {
 }
 
 function setSpeedEase(speed, a, done) {
-	var speedDiff = speed - speedPastSetTmp;
-	var speedToSet = speedPastSetTmp;;
+	var speedDiff = speed - speedPastSet;
+	var speedToSet = speedPastSet;;
 	var a;
 
 	var i = 0;
