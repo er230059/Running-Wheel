@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="/css/style.css">
+</head>
+<body>
+
+<div id="container" style="width:100%">
+<script src="/socket.io/socket.io.js"></script>
+
+<div id="header" style="background-color:#FFFFFF;">
+	<h1 style="margin-bottom:0;">Effective Runing Wheel</h1></div>
+	<div id="menu" style="background-color:#FFFFFF;height:300px;width:30%;float:left;">
+		<table border="0" align="center">
+		　<tr>
+			　<td>已訓練時間:</td>
+			  <td><span id = "t_time"></span></td>
+		　</tr>
+		  <tr></tr>
+		  <tr></tr>
+		  <tr>
+			　<td>滾輪轉速:</td>
+			  <td><span id = "t_mps"></span></td>
+		　</tr>
+		  <tr></tr>
+		  <tr></tr>
+		  <tr>
+			　<td>溫度:</td>
+			  <td><span id = "t_t"></span></td>
+		　</tr>
+		  <tr></tr>
+		  <tr></tr>
+		  <tr>
+			　<td>心率:</td>
+			  <td><span id = "t_hr"></span></td>
+		　</tr>
+		  <tr></tr>
+		  <tr></tr>
+		  <tr>
+			　<td>體動:</td>
+			  <td><span id = "t_motion"></span></td>
+		　</tr>
+		  <tr></tr>
+		  <tr></tr>
+		  <tr>
+			　<td>HRV:</td>
+			  <td><span id = "t_hrv"></span></td>
+		　</tr>
+		  <tr></tr>
+		  <tr></tr>
+		</table>
+	</div>
+
+	<div id="content" style="background-color:#FFFFFF;height:300px;width:70%;float:left;">
+		<img src="test.jpg" width="300" height="300">
+	</div>
+
+		<div id="footer" style="background-color:#FFFFFF;clear:both;text-align:left;">
+			<a href="/" class="button">Training Setting</a>
+			<a href="/" class="button">Common Monitor</a>
+			<a href="/" class="button">Special Monitor</a>
+		</div>
+
+	</div>
+
+	<script>
+		var socket = io();
+		socket.on('sensor_data', function (data) {
+			var json = JSON.parse(data);
+			document.getElementById("t_mps").innerHTML = json.speed;
+		});
+	</script>
+</body>
+</html>

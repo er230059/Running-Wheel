@@ -1,0 +1,33 @@
+.button {
+	background-color: #FF7744;
+	border: none;
+	color: white;
+	padding: 24px 40px;
+	margin: 10px;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-size: 24px;
+}
+.button-record {
+	background-color: #009900;
+	border: none;
+	color: white;
+	padding: 32px 96px;
+	margin-left:120px;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-size: 24px;
+}
+#div0 {
+	float: left;
+	width: 55%;
+	margin-top: 180px;
+}
+#div1 {
+	float: left;
+	width: 30%;
+	margin-top: 24px;
+	font-size: 22px;
+}
