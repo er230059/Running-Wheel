@@ -1,0 +1,20 @@
+canvas {
+	pointer-events: none;
+}
+#menu {
+	background-color: #FFFFFF;
+	height: 1300px;
+	width: 15%;
+	float: left;
+}
+#content {
+	background-color: #FFFFFF;
+	height: 1300px;
+	width: 80%;
+	float: left;
+}
+#footer {
+	background-color: #FFFFFF;
+	clear: both;
+	text-align: left;
+}

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" type="text/css" href="/css/cmonitor.css">
+		<title>Common Monitor</title>
+	</head>
+	<body>
+		Common Monitor<br><br><br>
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="/js/chart.js"></script>
+		
+		<div id="menu">
+			<table border="0" align="left">
+				<tr>
+					<td>Speed:</td>
+					<td><span id = "t_mpm">0</span></td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+				</tr>
+			  <tr>
+					<td>IR1:</td>
+					<td><span id = "ir0">0</span></td>
+				</tr>
+			  <tr>
+					<td>IR2:</td>
+					<td><span id = "ir1">0</span></td>
+				</tr>
+			  <tr>
+					<td>IR3:</td>
+					<td><span id = "ir2">0</span></td>
+				</tr>
+			  <tr>
+					<td>IR4:</td>
+					<td><span id = "ir3">0</span></td>
+				</tr>
+			  <tr>
+					<td>Total:</td>
+					<td><span id = "ir_total">0</span></td>
+				</tr>
+			</table>
+		</div>
+
+		<div id="content">
+			<canvas id="canvas1" height="150" width="800"></canvas><br>
+			<canvas id="canvas2" height="150" width="800"></canvas><br>
+			<canvas id="canvas3" height="150" width="800"></canvas><br>
+			<canvas id="canvas4" height="150" width="800"></canvas><br>
+			<script>
+				var chartData1 = {
+					labels : [],
+					datasets : [
+						{
+							label: "速度",
+							fill: false,
+							spanGaps: true,
+							backgroundColor: "rgba(75,192,192,0.4)",
+							borderColor: "rgba(75,192,192,1)",
+							pointRadius: 0,
+							data : []
+						}
+					]
+				}
+				var chartData2 = {
+					labels : [],
+					datasets : [
+						{
+							label: "IR位置角度",
+							fill: false,
+							backgroundColor: "rgba(75,192,192,0.4)",
+							borderColor: "rgba(75,192,192,1)",
+							pointRadius: 0,
+							data : []
+						}
+					]
+				}
+				var chartData3 = {
+					labels : [],
+					datasets : [
+						{
+							label: "PPG",
+							fill: false,
+							backgroundColor: "rgba(75,192,192,0.4)",
+							borderColor: "rgba(75,192,192,1)",
+							pointRadius: 0,
+							data : []
+						}
+					]
+				}
+				var chartData4 = {
+					labels : [],
+					datasets : [
+						{
+							label: "G sensor",
+							fill: false,
+							backgroundColor: "rgba(75,192,192,0.4)",
+							borderColor: "rgba(75,192,192,1)",
+							pointRadius: 0,
+							data : []
+						}
+					]
+				}
+				
+				for (var i = 0; i <= 150; i++) {
+					chartData1.labels.push('');
+					chartData1.datasets[0].data.push(null);
+					chartData2.labels.push('');
+					chartData2.datasets[0].data.push(null);
+					chartData3.labels.push('');
+					chartData3.datasets[0].data.push(null);
+					chartData4.labels.push('');
+					chartData4.datasets[0].data.push(null);
+				}
+				
+				var ctx1 = document.getElementById("canvas1").getContext("2d");
+				var ctx2 = document.getElementById("canvas2").getContext("2d");
+				var ctx3 = document.getElementById("canvas3").getContext("2d");
+				var ctx4 = document.getElementById("canvas4").getContext("2d");
+				
+				var Chart1 = new Chart(ctx1, {
+					type: 'line',
+					data: chartData1,
+					options: {
+						animation: false,
+						scales: {
+							yAxes: [{
+								ticks: {
+									max: 40,
+									min: 0,
+									stepSize: 5
+								}
+							}]
+						}	
+					}
+				});
+				var Chart2 = new Chart(ctx2, {
+					type: 'line',
+					data: chartData2,
+					options: {
+						animation: false,
+						scales: {
+							yAxes: [{
+								ticks: {
+									max: 135,
+									min: 0,
+									stepSize: 22.5
+								}
+							}]
+						}	
+					}
+				});
+				var Chart3 = new Chart(ctx3, {
+					type: 'line',
+					data: chartData3,
+					options: {
+						animation: false
+					}
+				});
+				var Chart4 = new Chart(ctx4, {
+					type: 'line',
+					data: chartData4,
+					options: {
+						animation: false
+					}
+				});
+				
+				var socket = io();
+				socket.on('sensor_data', function (data) {
+					var json = JSON.parse(data);
+					document.getElementById("t_mpm").innerHTML = json.speed;
+					document.getElementById("ir0").innerHTML = json.IR_total[0];
+					document.getElementById("ir1").innerHTML = json.IR_total[1];
+					document.getElementById("ir2").innerHTML = json.IR_total[2];
+					document.getElementById("ir3").innerHTML = json.IR_total[3];
+					document.getElementById("ir_total").innerHTML = json.IR_total[0] + json.IR_total[1] + json.IR_total[2] + json.IR_total[3];
+					
+					chartData1.datasets[0].data.push(json.speed);
+					chartData1.datasets[0].data.shift();
+					Chart1.update();
+					
+					var ir_value = null;
+					var plus = false;
+					if(json.IR[0] == 0){
+						ir_value=0;
+						if(json.IR[1] == 0){
+							ir_value += 22.5;
+							plus = true;
+						}
+					}
+					if(json.IR[1] == 0 && !plus){
+						ir_value = 45;
+						if(json.IR[2] == 0){
+							ir_value += 22.5;
+							plus = true;
+						}
+					}
+					if(json.IR[2] == 0 && !plus){
+						ir_value = 90;
+						if(json.IR[3] == 0){
+							ir_value += 22.5;
+							plus = true;
+						}
+					}
+					if(json.IR[3] == 0 && !plus){
+						ir_value = 135;
+					}
+					chartData2.datasets[0].data.push(ir_value);
+					chartData2.datasets[0].data.shift();
+					Chart2.update();					
+				});
+			</script>
+		</div>
+		<div id="footer">
+			<a href="/" class="button">Homepage</a>
+			<a href="/" class="button">Training Setting</a>
+			<a href="/" class="button">Special Monitor</a>
+		</div>
+	</body>
+</html>
