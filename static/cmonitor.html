@@ -41,6 +41,16 @@
 					<td><span id = "ir_total">0</span></td>
 				</tr>
 			</table>
+			<br><br><br><br><br><br><br><br><br><br><br>
+			PPG Channel<br>
+			<input type="radio" name="ppg" value="0" onchange="ppgChannelSelect(this)" checked>x1<br>
+			<input type="radio" name="ppg" value="1" onchange="ppgChannelSelect(this)">x10<br>
+			<input type="radio" name="ppg" value="2" onchange="ppgChannelSelect(this)">x100<br>
+			<br><br><br>
+			G-sensor Channel<br>
+			<input type="radio" name="gsensor" value="0" onchange="gsensorChannelSelect(this)" checked>X<br>
+			<input type="radio" name="gsensor" value="1" onchange="gsensorChannelSelect(this)">Y<br>
+			<input type="radio" name="gsensor" value="2" onchange="gsensorChannelSelect(this)">Z<br>			
 		</div>
 
 		<div id="content">
@@ -49,6 +59,8 @@
 			<canvas id="canvas3" height="150" width="800"></canvas><br>
 			<canvas id="canvas4" height="150" width="800"></canvas><br>
 			<script>
+				var ppgChannel = 0, gsensorChannel = 0;
+			
 				var chartData1 = {
 					labels : [],
 					datasets : [
@@ -93,7 +105,7 @@
 					labels : [],
 					datasets : [
 						{
-							label: "G sensor",
+							label: "G-sensor",
 							fill: false,
 							backgroundColor: "rgba(75,192,192,0.4)",
 							borderColor: "rgba(75,192,192,1)",
@@ -120,7 +132,7 @@
 				var ctx4 = document.getElementById("canvas4").getContext("2d");
 				
 				var Chart1 = new Chart(ctx1, {
-					type: 'line',
+					type: "line",
 					data: chartData1,
 					options: {
 						animation: false,
@@ -136,7 +148,7 @@
 					}
 				});
 				var Chart2 = new Chart(ctx2, {
-					type: 'line',
+					type: "line",
 					data: chartData2,
 					options: {
 						animation: false,
@@ -152,14 +164,14 @@
 					}
 				});
 				var Chart3 = new Chart(ctx3, {
-					type: 'line',
+					type: "line",
 					data: chartData3,
 					options: {
 						animation: false
 					}
 				});
 				var Chart4 = new Chart(ctx4, {
-					type: 'line',
+					type: "line",
 					data: chartData4,
 					options: {
 						animation: false
@@ -178,8 +190,7 @@
 					
 					chartData1.datasets[0].data.push(json.speed);
 					chartData1.datasets[0].data.shift();
-					Chart1.update();
-					
+										
 					var ir_value = null;
 					var plus = false;
 					if(json.IR[0] == 0){
@@ -208,8 +219,48 @@
 					}
 					chartData2.datasets[0].data.push(ir_value);
 					chartData2.datasets[0].data.shift();
-					Chart2.update();					
+					
+					var ppg_value = null;
+					if(ppgChannel == 0) {
+						ppg_value = json.ppg['x1'];
+					} else if (ppgChannel == 1) {
+						ppg_value = json.ppg['x10'];
+					} else if (ppgChannel == 2) {
+						ppg_value = json.ppg['x100'];
+					}
+					chartData3.datasets[0].data.push(ppg_value);
+					chartData3.datasets[0].data.shift();
+					
+					var gsensor_value = null;
+					if(gsensorChannel == 0) {
+						gsensor_value = json.g_sensor['x'];
+					} else if (gsensorChannel == 1) {
+						gsensor_value = json.g_sensor['y'];
+					} else if (gsensorChannel == 2) {
+						gsensor_value = json.g_sensor['z'];
+					}
+					chartData4.datasets[0].data.push(gsensor_value);
+					chartData4.datasets[0].data.shift();
+					
+					Chart1.update();
+					Chart2.update();
+					Chart3.update();
+					Chart4.update();
 				});
+				
+				function ppgChannelSelect(s) {
+					ppgChannel = s.value;
+					for (var i = 0; i <= 150; i++) {
+						chartData3.datasets[0].data[i] = null;
+					}
+				}
+				
+				function gsensorChannelSelect(s) {
+					gsensorChannel = s.value;
+					for (var i = 0; i <= 150; i++) {
+						chartData4.datasets[0].data[i] = null;
+					}
+				}
 			</script>
 		</div>
 		<div id="footer">
