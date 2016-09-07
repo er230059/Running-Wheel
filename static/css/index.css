@@ -20,14 +20,6 @@
 	display: inline-block;
 	font-size: 24px;
 }
-#div0 {
-	float: left;
-	width: 55%;
-	margin-top: 180px;
-}
-#div1 {
-	float: left;
-	width: 30%;
-	margin-top: 24px;
-	font-size: 22px;
+#menu {
+	margin-left:20px;
 }

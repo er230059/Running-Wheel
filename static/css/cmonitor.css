@@ -6,15 +6,11 @@ canvas {
 	height: 1300px;
 	width: 15%;
 	float: left;
+	margin-left:20px;
 }
-#content {
+#chart_area {
 	background-color: #FFFFFF;
 	height: 1300px;
 	width: 80%;
 	float: left;
-}
-#footer {
-	background-color: #FFFFFF;
-	clear: both;
-	text-align: left;
 }

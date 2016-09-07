@@ -84,7 +84,7 @@ setInterval(function () {
 		"timestamp": Date.now()
 	};
 	io.emit('sensor_data', JSON.stringify(json));
-}, 50);
+}, 10);
 
 function trainingLoop () {
 	if(Date.now() >= endTime) {

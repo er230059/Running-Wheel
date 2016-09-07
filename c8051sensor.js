@@ -19,9 +19,9 @@ sensorPort.on('data', function (data) {
 		sensorBuffer.push(data[i]);
 	}
 	var startPos = -1;
-	for(var i = 0; i < sensorBuffer.length - 1; i++) {
-		if(sensorBuffer[i] == 0x01 && sensorBuffer[i + 1] == 0x02) {
-			startPos = i;
+	for(var i = sensorBuffer.length - 1; i > 0; i--) {
+		if(sensorBuffer[i] == 0x02 && sensorBuffer[i - 1] == 0x01) {
+			startPos = i - 1;
 			break;
 		}
 	}
@@ -35,7 +35,7 @@ sensorPort.on('data', function (data) {
 			"IR": bIR.split('').reverse(),
 			"speed": speed
 		};
-		sensorBuffer.splice(0,startPos + 5);
+		sensorBuffer = [];
 	}
 });
 

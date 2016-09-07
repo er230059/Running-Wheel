@@ -1,75 +1,63 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<meta charset="UTF-8">
-	<link rel="stylesheet" type="text/css" href="/css/index.css">
-</head>
-<body>
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" type="text/css" href="css/index.css">
+		<link rel="stylesheet" type="text/css" href="css/vendor/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="css/flat-ui.min.css">
+	</head>
+	<body>
+		<script src="js/vendor/jquery.min.js"></script>
+		<script src="js/flat-ui.min.js"></script>
+		<script src="js/application.js"></script>
+		<script src="js/chart.js"></script>
+		<script src="socket.io/socket.io.js"></script>
 
-<div id="container" style="width:100%">
-<script src="/socket.io/socket.io.js"></script>
-
-<div id="header" style="background-color:#FFFFFF;">
-	<h1 style="margin-bottom:0;">Effective Runing Wheel</h1></div>
-	<div id="menu" style="background-color:#FFFFFF;height:300px;width:30%;float:left;">
-		<table border="0" align="center">
-		　<tr>
-			　<td>已訓練時間:</td>
-			  <td><span id = "t_time"></span></td>
-		　</tr>
-		  <tr></tr>
-		  <tr></tr>
-		  <tr>
-			　<td>滾輪轉速:</td>
-			  <td><span id = "t_mps"></span></td>
-		　</tr>
-		  <tr></tr>
-		  <tr></tr>
-		  <tr>
-			　<td>溫度:</td>
-			  <td><span id = "t_t"></span></td>
-		　</tr>
-		  <tr></tr>
-		  <tr></tr>
-		  <tr>
-			　<td>心率:</td>
-			  <td><span id = "t_hr"></span></td>
-		　</tr>
-		  <tr></tr>
-		  <tr></tr>
-		  <tr>
-			　<td>體動:</td>
-			  <td><span id = "t_motion"></span></td>
-		　</tr>
-		  <tr></tr>
-		  <tr></tr>
-		  <tr>
-			　<td>HRV:</td>
-			  <td><span id = "t_hrv"></span></td>
-		　</tr>
-		  <tr></tr>
-		  <tr></tr>
-		</table>
-	</div>
-
-	<div id="content" style="background-color:#FFFFFF;height:300px;width:70%;float:left;">
-		<img src="test.jpg" width="300" height="300">
-	</div>
-
-		<div id="footer" style="background-color:#FFFFFF;clear:both;text-align:left;">
-			<a href="/" class="button">Training Setting</a>
-			<a href="cmonitor.html" class="button">Common Monitor</a>
-			<a href="/" class="button">Special Monitor</a>
+		<div class="col-xs-12">
+			<nav class="navbar navbar-inverse" role="navigation">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-01">
+						<span class="sr-only">Toggle navigation</span>
+					</button>
+					<a class="navbar-brand" href="/">Runner Wheel</a>
+				</div>
+				<div class="collapse navbar-collapse" id="navbar-collapse-01">
+					<ul class="nav navbar-nav navbar-left">
+						<li><a href="#">Training Setting</a></li>
+						<li><a href="/cmonitor.html">Common Monitor</a></li>
+						<li><a href="#">Special Monitor</a></li>
+					</ul>
+				</div><!-- /.navbar-collapse -->
+			</nav><!-- /navbar -->
 		</div>
 
-	</div>
+		<div id="menu" style="background-color:#FFFFFF;height:300px;width:30%;float:left;">
+			<table border="0" align="left">
+				<tr>
+					<td>已訓練時間:</td>
+					<td><span id = "t_time"></span></td>
+				</tr>
+				<tr>
+					<td>滾輪轉速:</td>
+					<td><span id = "t_mps"></span></td>
+				</tr>
+				<tr>
+					<td>溫度:</td>
+					<td><span id = "t_t"></span></td>
+				</tr>
+				<tr>
+					<td>心率:</td>
+					<td><span id = "t_hr"></span></td>
+				</tr>
+			</table>
+		</div>
 
-	<script>
-		var socket = io();
-		socket.on('sensor_data', function (data) {
-			var json = JSON.parse(data);
-			document.getElementById("t_mps").innerHTML = json.speed;
-		});
-	</script>
-</body>
+		<script>
+			var socket = io();
+			socket.on('sensor_data', function (data) {
+				var json = JSON.parse(data);
+				document.getElementById("t_mps").innerHTML = json.speed;
+			});
+		</script>
+	</body>
 </html>

@@ -3,7 +3,7 @@ var SerialPort = require('serialport');
 var ppgData = {};
 var ppgBuffer = [];
 
-var ppgPort = new SerialPort('/dev/ttyUSB0', {
+var ppgPort = new SerialPort('/dev/ttyO1', {
 	baudRate: 230400
 });
 
@@ -29,9 +29,9 @@ ppgPort.on('data', function (data) {
 		ppgBuffer.push(data[i]);
 	}
 	var startPos = -1;
-	for(var i = 0; i < ppgBuffer.length - 2; i++) {
-		if(ppgBuffer[i] == 0x30 && ppgBuffer[i + 1] == 0x20 && ppgBuffer[i + 2] == 0x13) {
-			startPos = i;
+	for(var i = ppgBuffer.length - 1; i > 1; i--) {
+		if(ppgBuffer[i] == 0x13 && ppgBuffer[i - 1] == 0x20 && ppgBuffer[i - 2] == 0x30) {
+			startPos = i - 2;
 			break;
 		}
 	}
@@ -50,7 +50,7 @@ ppgPort.on('data', function (data) {
 			'ppgx10': ppg10Buf.readUInt16BE(0),
 			'ppgx100': ppg100Buf.readUInt16BE(0)
 		};
-		ppgBuffer.splice(0, startPos + 21);
+		ppgBuffer = [];
 	}
 });
 

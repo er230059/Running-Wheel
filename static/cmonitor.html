@@ -2,14 +2,36 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<link rel="stylesheet" type="text/css" href="/css/cmonitor.css">
+		<link rel="stylesheet" type="text/css" href="css/cmonitor.css">
+		<link rel="stylesheet" type="text/css" href="css/vendor/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="css/flat-ui.min.css">
 		<title>Common Monitor</title>
 	</head>
 	<body>
-		Common Monitor<br><br><br>
-		<script src="/socket.io/socket.io.js"></script>
-		<script src="/js/chart.js"></script>
-		
+		<script src="js/vendor/jquery.min.js"></script>
+		<script src="js/flat-ui.min.js"></script>
+		<script src="js/application.js"></script>
+		<script src="js/chart.js"></script>
+		<script src="socket.io/socket.io.js"></script>
+
+		<div class="col-xs-12">
+			<nav class="navbar navbar-inverse" role="navigation">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-01">
+						<span class="sr-only">Toggle navigation</span>
+					</button>
+					<a class="navbar-brand" href="/">Runner Wheel</a>
+				</div>
+				<div class="collapse navbar-collapse" id="navbar-collapse-01">
+					<ul class="nav navbar-nav navbar-left">
+						<li><a href="#">Training Setting</a></li>
+						<li class="active"><a href="#">Common Monitor</a></li>
+						<li><a href="#">Special Monitor</a></li>
+					</ul>
+				</div>
+			</nav>
+		</div>
+
 		<div id="menu">
 			<table border="0" align="left">
 				<tr>
@@ -20,47 +42,63 @@
 					<td>&nbsp;</td>
 					<td>&nbsp;</td>
 				</tr>
-			  <tr>
+				<tr>
 					<td>IR1:</td>
 					<td><span id = "ir0">0</span></td>
 				</tr>
-			  <tr>
+				<tr>
 					<td>IR2:</td>
 					<td><span id = "ir1">0</span></td>
 				</tr>
-			  <tr>
+				<tr>
 					<td>IR3:</td>
 					<td><span id = "ir2">0</span></td>
 				</tr>
-			  <tr>
+				<tr>
 					<td>IR4:</td>
 					<td><span id = "ir3">0</span></td>
 				</tr>
-			  <tr>
+				<tr>
 					<td>Total:</td>
 					<td><span id = "ir_total">0</span></td>
 				</tr>
 			</table>
-			<br><br><br><br><br><br><br><br><br><br><br>
-			PPG Channel<br>
-			<input type="radio" name="ppg" value="0" onchange="ppgChannelSelect(this)" checked>x1<br>
-			<input type="radio" name="ppg" value="1" onchange="ppgChannelSelect(this)">x10<br>
-			<input type="radio" name="ppg" value="2" onchange="ppgChannelSelect(this)">x100<br>
-			<br><br><br>
-			G-sensor Channel<br>
-			<input type="radio" name="gsensor" value="0" onchange="gsensorChannelSelect(this)" checked>X<br>
-			<input type="radio" name="gsensor" value="1" onchange="gsensorChannelSelect(this)">Y<br>
-			<input type="radio" name="gsensor" value="2" onchange="gsensorChannelSelect(this)">Z<br>			
+			<br><br><br><br><br><br><br><br>
+			<div>
+				PPG Channel
+				<label class="radio">
+					<input type="radio" name="ppgRadios" id="ppgRadios1" value="0" data-toggle="radio" onchange="ppgChannelSelect(this)" checked>x1
+				</label>
+				<label class="radio">
+					<input type="radio" name="ppgRadios" id="ppgRadios2" value="1" data-toggle="radio" onchange="ppgChannelSelect(this)">x10
+				</label>
+				<label class="radio">
+					<input type="radio" name="ppgRadios" id="ppgRadios3" value="2" data-toggle="radio" onchange="ppgChannelSelect(this)">x100
+				</label>
+			</div>
+			<br>
+			<div>
+				G-sensor Channel
+				<label class="radio">
+					<input type="radio" name="gsensorRadios" id="gsensorRadios1" value="0" data-toggle="radio" onchange="gsensorChannelSelect(this)" checked>X
+				</label>
+				<label class="radio">
+					<input type="radio" name="gsensorRadios" id="gsensorRadios2" value="1" data-toggle="radio" onchange="gsensorChannelSelect(this)">Y
+			 	</label>
+				<label class="radio">
+					<input type="radio" name="gsensorRadios" id="gsensorRadios3" value="2" data-toggle="radio" onchange="gsensorChannelSelect(this)">Z
+				</label>
+			</div>
 		</div>
 
-		<div id="content">
+		<div id="chart_area">
 			<canvas id="canvas1" height="150" width="800"></canvas><br>
 			<canvas id="canvas2" height="150" width="800"></canvas><br>
 			<canvas id="canvas3" height="150" width="800"></canvas><br>
 			<canvas id="canvas4" height="150" width="800"></canvas><br>
 			<script>
 				var ppgChannel = 0, gsensorChannel = 0;
-			
+
 				var chartData1 = {
 					labels : [],
 					datasets : [
@@ -114,7 +152,7 @@
 						}
 					]
 				}
-				
+
 				for (var i = 0; i <= 150; i++) {
 					chartData1.labels.push('');
 					chartData1.datasets[0].data.push(null);
@@ -125,12 +163,12 @@
 					chartData4.labels.push('');
 					chartData4.datasets[0].data.push(null);
 				}
-				
+
 				var ctx1 = document.getElementById("canvas1").getContext("2d");
 				var ctx2 = document.getElementById("canvas2").getContext("2d");
 				var ctx3 = document.getElementById("canvas3").getContext("2d");
 				var ctx4 = document.getElementById("canvas4").getContext("2d");
-				
+
 				var Chart1 = new Chart(ctx1, {
 					type: "line",
 					data: chartData1,
@@ -144,7 +182,7 @@
 									stepSize: 5
 								}
 							}]
-						}	
+						}
 					}
 				});
 				var Chart2 = new Chart(ctx2, {
@@ -160,7 +198,7 @@
 									stepSize: 22.5
 								}
 							}]
-						}	
+						}
 					}
 				});
 				var Chart3 = new Chart(ctx3, {
@@ -177,20 +215,23 @@
 						animation: false
 					}
 				});
-				
+
 				var socket = io();
+				var json;
 				socket.on('sensor_data', function (data) {
-					var json = JSON.parse(data);
+					json = JSON.parse(data);
+				});
+
+				function updateData () {
 					document.getElementById("t_mpm").innerHTML = json.speed;
 					document.getElementById("ir0").innerHTML = json.IR_total[0];
 					document.getElementById("ir1").innerHTML = json.IR_total[1];
 					document.getElementById("ir2").innerHTML = json.IR_total[2];
 					document.getElementById("ir3").innerHTML = json.IR_total[3];
 					document.getElementById("ir_total").innerHTML = json.IR_total[0] + json.IR_total[1] + json.IR_total[2] + json.IR_total[3];
-					
 					chartData1.datasets[0].data.push(json.speed);
 					chartData1.datasets[0].data.shift();
-										
+
 					var ir_value = null;
 					var plus = false;
 					if(json.IR[0] == 0){
@@ -219,7 +260,7 @@
 					}
 					chartData2.datasets[0].data.push(ir_value);
 					chartData2.datasets[0].data.shift();
-					
+
 					var ppg_value = null;
 					if(ppgChannel == 0) {
 						ppg_value = json.ppg['x1'];
@@ -230,7 +271,7 @@
 					}
 					chartData3.datasets[0].data.push(ppg_value);
 					chartData3.datasets[0].data.shift();
-					
+
 					var gsensor_value = null;
 					if(gsensorChannel == 0) {
 						gsensor_value = json.g_sensor['x'];
@@ -241,20 +282,22 @@
 					}
 					chartData4.datasets[0].data.push(gsensor_value);
 					chartData4.datasets[0].data.shift();
-					
+
 					Chart1.update();
 					Chart2.update();
 					Chart3.update();
 					Chart4.update();
-				});
-				
+				}
+
+				setInterval(updateData, 33);
+
 				function ppgChannelSelect(s) {
 					ppgChannel = s.value;
 					for (var i = 0; i <= 150; i++) {
 						chartData3.datasets[0].data[i] = null;
 					}
 				}
-				
+
 				function gsensorChannelSelect(s) {
 					gsensorChannel = s.value;
 					for (var i = 0; i <= 150; i++) {
@@ -262,11 +305,6 @@
 					}
 				}
 			</script>
-		</div>
-		<div id="footer">
-			<a href="/" class="button">Homepage</a>
-			<a href="/" class="button">Training Setting</a>
-			<a href="/" class="button">Special Monitor</a>
 		</div>
 	</body>
 </html>
