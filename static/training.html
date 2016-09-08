@@ -224,15 +224,6 @@
 					xhttp.open("POST", "/training_init", true);
 					xhttp.setRequestHeader("Content-Type", "application/json");
 					xhttp.send(JSON.stringify(json));
-
-					document.getElementById("start").className = "btn btn-block btn-lg btn-primary disabled";
-					document.getElementById("stop").className = "btn btn-block btn-lg btn-danger";
-
-					document.getElementById("acceleration").disabled = "disabled";
-					document.getElementById("deceleration").disabled = "disabled";
-					document.getElementById("maxspeed").disabled = "disabled";
-					document.getElementById("minspeed").disabled = "disabled";
-					document.getElementById("time").disabled = "disabled";
 				}
 			}
 
@@ -240,15 +231,6 @@
 				var xhttp = new XMLHttpRequest();
 				xhttp.open("POST", "/training_stop", true);
 				xhttp.send();
-
-				document.getElementById("start").className = "btn btn-block btn-lg btn-primary";
-				document.getElementById("stop").className = "btn btn-block btn-lg btn-danger disabled";
-
-				document.getElementById("acceleration").disabled = "";
-				document.getElementById("deceleration").disabled = "";
-				document.getElementById("maxspeed").disabled = "";
-				document.getElementById("minspeed").disabled = "";
-				document.getElementById("time").disabled = "";
 			}
 
 			var socket = io();

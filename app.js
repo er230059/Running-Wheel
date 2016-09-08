@@ -168,7 +168,7 @@ app.get('/trainingParams', function (request, response) {
 	response.send(JSON.stringify(json));
 });
 
-app.get('/training_stop', function (request, response) {
+app.post('/training_stop', function (request, response) {
 	if(trainingParams.inTraining) {
 		clearInterval(timer);
 
