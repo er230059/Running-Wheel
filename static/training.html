@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" type="text/css" href="css/training.css">
+		<link rel="stylesheet" type="text/css" href="css/vendor/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="css/flat-ui.min.css">
+		<title>Running Wheel</title>
+	</head>
+	<body>
+		<script src="js/vendor/jquery.min.js"></script>
+		<script src="js/flat-ui.min.js"></script>
+		<script src="js/application.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+
+		<div class="col-xs-12">
+			<nav class="navbar navbar-inverse" role="navigation">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-01">
+						<span class="sr-only">Toggle navigation</span>
+					</button>
+					<a class="navbar-brand" href="index.html">Running Wheel</a>
+				</div>
+				<div class="collapse navbar-collapse" id="navbar-collapse-01">
+					<ul class="nav navbar-nav">
+						<li class="active"><a href="#">Training Setting</a></li>
+						<li><a href="#">Special Monitor</a></li>
+					</ul>
+				</div>
+			</nav>
+		</div>
+
+		<div id="area-alert">
+		</div>
+
+		<div id="area" class="container-fluid">
+			<div id="container-input">
+				<div class="row">
+					<div class="col-sm-1"></div>
+					<div class="col-sm-6">
+						<div class="col-sm-5">
+							加速度:
+						</div>
+						<div class="col-sm-5">
+							<div class="form-group">
+								<input type="text" value="" placeholder="" id="acceleration" class="form-control">
+							</div>
+						</div>
+						<div class="col-sm-1">
+							m/s^2
+						</div>
+					</div>
+				</div>
+				<br>
+				<div class="row">
+					<div class="col-sm-1"></div>
+					<div class="col-sm-6">
+						<div class="col-sm-5">
+							減速度:
+						</div>
+						<div class="col-sm-5">
+							<div class="form-group">
+								<input type="text" value="" placeholder="" id="deceleration" class="form-control">
+							</div>
+						</div>
+						<div class="col-sm-1">
+							m/s^2
+						</div>
+					</div>
+				</div>
+				<br>
+				<div class="row">
+					<div class="col-sm-1"></div>
+					<div class="col-sm-6">
+						<div class="col-sm-5">
+							最高速度:
+						</div>
+						<div class="col-sm-5">
+							<div class="form-group">
+								<input type="text" value="" placeholder="" id="maxspeed" class="form-control">
+							</div>
+						</div>
+						<div class="col-sm-1">
+							m/s
+						</div>
+					</div>
+				</div>
+				<br>
+				<div class="row">
+					<div class="col-sm-1"></div>
+					<div class="col-sm-6">
+						<div class="col-sm-5">
+							最低速度:
+						</div>
+						<div class="col-sm-5">
+							<div class="form-group">
+								<input type="text" value="" placeholder="" id="minspeed" class="form-control">
+							</div>
+						</div>
+						<div class="col-sm-1">
+							m/s
+						</div>
+					</div>
+				</div>
+				<br>
+				<div class="row">
+					<div class="col-sm-1"></div>
+					<div class="col-sm-6">
+						<div class="col-sm-5">
+							訓練時間:
+						</div>
+						<div class="col-sm-5">
+							<div class="form-group">
+								<input type="text" value="" placeholder="" id="time" class="form-control">
+							</div>
+						</div>
+						<div class="col-sm-1">
+							minute(s)
+						</div>
+					</div>
+				</div>
+				<br><br>
+				<div class="row">
+					<div class="col-xs-5">
+						<button id="start" type="button" class="btn btn-block btn-lg btn-primary disabled" onclick="start()">Start</button>
+					</div>
+					<div class="col-xs-5">
+						<button id="stop" type="button" class="btn btn-block btn-lg btn-danger disabled" onclick="stop()">Stop</button>
+					</div>
+				</div>
+				<br>
+			</div>
+		</div>
+		<script>
+			function getTrainingSetting () {
+				var xhttp = new XMLHttpRequest();
+				xhttp.onreadystatechange = function () {
+					if (this.readyState == 4 && this.status == 200) {
+						var json = JSON.parse(this.responseText);
+						if(json.training) {
+							document.getElementById("start").className = "btn btn-block btn-lg btn-primary disabled";
+							document.getElementById("stop").className = "btn btn-block btn-lg btn-danger";
+
+							document.getElementById("acceleration").value = json.acceleration;
+							document.getElementById("deceleration").value = json.deceleration;
+							document.getElementById("maxspeed").value = json.maxspeed;
+							document.getElementById("minspeed").value = json.minspeed;
+							document.getElementById("time").value = json.time;
+
+							document.getElementById("acceleration").disabled = "disabled";
+							document.getElementById("deceleration").disabled = "disabled";
+							document.getElementById("maxspeed").disabled = "disabled";
+							document.getElementById("minspeed").disabled = "disabled";
+							document.getElementById("time").disabled = "disabled";
+
+							showInfoMessage("滾輪運作中!");
+						} else {
+							document.getElementById("start").className = "btn btn-block btn-lg btn-primary";
+							document.getElementById("stop").className = "btn btn-block btn-lg btn-danger disabled";
+
+							document.getElementById("acceleration").value = "";
+							document.getElementById("deceleration").value = "";
+							document.getElementById("maxspeed").value = "";
+							document.getElementById("minspeed").value = "";
+							document.getElementById("time").value = "";
+
+							document.getElementById("acceleration").disabled = "";
+							document.getElementById("deceleration").disabled = "";
+							document.getElementById("maxspeed").disabled = "";
+							document.getElementById("minspeed").disabled = "";
+							document.getElementById("time").disabled = "";
+
+							showInfoMessage("滾輪已停止!");
+						}
+					}
+				};
+				xhttp.open("GET", "/trainingParams", true);
+				xhttp.send();
+			}
+
+			function showInfoMessage (msg) {
+				document.getElementById("area-alert").innerHTML = "<div class=\"alert alert-info\">" +
+					"<a href=\"#\" class=\"close\" data-dismiss=\"alert\">&times;</a> " + msg +
+					"</div>"
+			}
+
+			function showWarringMessage (msg) {
+				document.getElementById("area-alert").innerHTML = "<div class=\"alert alert-warning\">" +
+					"<a href=\"#\" class=\"close\" data-dismiss=\"alert\">&times;</a> " +
+					"<strong>錯誤: </strong>" + msg +
+					"</div>"
+			}
+
+			function start () {
+				var acceleration = parseFloat(document.getElementById("acceleration").value);
+				var deceleration = parseFloat(document.getElementById("deceleration").value);
+				var maxspeed = parseFloat(document.getElementById("maxspeed").value);
+				var minspeed = parseFloat(document.getElementById("minspeed").value);
+				var time = parseInt(document.getElementById("time").value);
+
+				if(!acceleration || acceleration <= 0) {
+					showWarringMessage("加速度須大於0!");
+				} else if (!deceleration || deceleration <= 0) {
+					showWarringMessage("減速度須大於0!");
+				} else if (!maxspeed || maxspeed <= 0) {
+					showWarringMessage("最高速度須大於0!");
+				} else if (!minspeed || minspeed <= 0) {
+					showWarringMessage("最低速度須大於0!");
+				} else if (!time || time <= 0) {
+					showWarringMessage("訓練時間須大於0!");
+				} else if (maxspeed < minspeed) {
+					showWarringMessage("最高速度不得小於最低速度!");
+				} else {
+
+					var json = {
+						"acceleration": acceleration,
+						"deceleration": deceleration,
+						"maxspeed": maxspeed,
+						"minspeed": minspeed,
+						"time": time
+					};
+
+					var xhttp = new XMLHttpRequest();
+					xhttp.open("POST", "/training_init", true);
+					xhttp.setRequestHeader("Content-Type", "application/json");
+					xhttp.send(JSON.stringify(json));
+
+					document.getElementById("start").className = "btn btn-block btn-lg btn-primary disabled";
+					document.getElementById("stop").className = "btn btn-block btn-lg btn-danger";
+
+					document.getElementById("acceleration").disabled = "disabled";
+					document.getElementById("deceleration").disabled = "disabled";
+					document.getElementById("maxspeed").disabled = "disabled";
+					document.getElementById("minspeed").disabled = "disabled";
+					document.getElementById("time").disabled = "disabled";
+				}
+			}
+
+			function stop () {
+				var xhttp = new XMLHttpRequest();
+				xhttp.open("POST", "/training_stop", true);
+				xhttp.send();
+
+				document.getElementById("start").className = "btn btn-block btn-lg btn-primary";
+				document.getElementById("stop").className = "btn btn-block btn-lg btn-danger disabled";
+
+				document.getElementById("acceleration").disabled = "";
+				document.getElementById("deceleration").disabled = "";
+				document.getElementById("maxspeed").disabled = "";
+				document.getElementById("minspeed").disabled = "";
+				document.getElementById("time").disabled = "";
+			}
+
+			var socket = io();
+			socket.on('training_state_update', function (data) {
+				getTrainingSetting();
+			});
+
+			getTrainingSetting();
+		</script>
+	</body>
+</html>

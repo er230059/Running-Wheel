@@ -1,25 +1,19 @@
-.button {
-	background-color: #FF7744;
-	border: none;
-	color: white;
-	padding: 24px 40px;
-	margin: 10px;
-	text-align: center;
-	text-decoration: none;
-	display: inline-block;
-	font-size: 24px;
-}
-.button-record {
-	background-color: #009900;
-	border: none;
-	color: white;
-	padding: 32px 96px;
-	margin-left:120px;
-	text-align: center;
-	text-decoration: none;
-	display: inline-block;
-	font-size: 24px;
+canvas {
+	pointer-events: none;
 }
 #menu {
-	margin-left:20px;
+	background-color: #FFFFFF;
+	height: 1300px;
+	width: 15%;
+	float: left;
+	margin: -10px 0 0 20px;
+}
+#area-chart {
+	background-color: #FFFFFF;
+	height: 1300px;
+	width: 80%;
+	float: left;
+}
+#state {
+	font-weight: bold;
 }

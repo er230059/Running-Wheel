@@ -5,13 +5,14 @@
 		<link rel="stylesheet" type="text/css" href="css/index.css">
 		<link rel="stylesheet" type="text/css" href="css/vendor/bootstrap/css/bootstrap.min.css">
 		<link rel="stylesheet" type="text/css" href="css/flat-ui.min.css">
+		<title>Running Wheel</title>
 	</head>
 	<body>
 		<script src="js/vendor/jquery.min.js"></script>
 		<script src="js/flat-ui.min.js"></script>
 		<script src="js/application.js"></script>
 		<script src="js/chart.js"></script>
-		<script src="socket.io/socket.io.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
 
 		<div class="col-xs-12">
 			<nav class="navbar navbar-inverse" role="navigation">
@@ -19,45 +20,327 @@
 					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-01">
 						<span class="sr-only">Toggle navigation</span>
 					</button>
-					<a class="navbar-brand" href="/">Runner Wheel</a>
+					<a class="navbar-brand" href="index.html">Running Wheel</a>
 				</div>
 				<div class="collapse navbar-collapse" id="navbar-collapse-01">
-					<ul class="nav navbar-nav navbar-left">
-						<li><a href="#">Training Setting</a></li>
-						<li><a href="/cmonitor.html">Common Monitor</a></li>
+					<ul class="nav navbar-nav">
+						<li><a href="training.html">Training Setting</a></li>
 						<li><a href="#">Special Monitor</a></li>
 					</ul>
-				</div><!-- /.navbar-collapse -->
-			</nav><!-- /navbar -->
+				</div>
+			</nav>
 		</div>
 
-		<div id="menu" style="background-color:#FFFFFF;height:300px;width:30%;float:left;">
+		<div id="menu">
 			<table border="0" align="left">
 				<tr>
-					<td>已訓練時間:</td>
-					<td><span id = "t_time"></span></td>
+					<td>狀態:&nbsp;</td>
+					<td><span id = "state">N/A</span></td>
 				</tr>
 				<tr>
-					<td>滾輪轉速:</td>
-					<td><span id = "t_mps"></span></td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
 				</tr>
 				<tr>
-					<td>溫度:</td>
-					<td><span id = "t_t"></span></td>
+					<td>速度:&nbsp;</td>
+					<td><span id = "t_mpm">0</span>&nbsp;m/s</td>
 				</tr>
 				<tr>
-					<td>心率:</td>
-					<td><span id = "t_hr"></span></td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>已訓練時間:&nbsp;</td>
+					<td><span id = "p_time">0</span>&nbsp;min(s)</td>
+				</tr>
+				<tr>
+					<td>總訓練時間:&nbsp;</td>
+					<td><span id = "t_time">0</span>&nbsp;min(s)</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>IR1:</td>
+					<td><span id = "ir0">0</span></td>
+				</tr>
+				<tr>
+					<td>IR2:</td>
+					<td><span id = "ir1">0</span></td>
+				</tr>
+				<tr>
+					<td>IR3:</td>
+					<td><span id = "ir2">0</span></td>
+				</tr>
+				<tr>
+					<td>IR4:</td>
+					<td><span id = "ir3">0</span></td>
+				</tr>
+				<tr>
+					<td>Other:</td>
+					<td><span id = "ir_other">0</span></td>
 				</tr>
 			</table>
+			<br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+			<div>
+				PPG Channel
+				<label class="radio">
+					<input type="radio" name="ppgRadios" id="ppgRadios1" value="0" data-toggle="radio" onchange="ppgChannelSelect(this)" checked>x1
+				</label>
+				<label class="radio">
+					<input type="radio" name="ppgRadios" id="ppgRadios2" value="1" data-toggle="radio" onchange="ppgChannelSelect(this)">x10
+				</label>
+				<label class="radio">
+					<input type="radio" name="ppgRadios" id="ppgRadios3" value="2" data-toggle="radio" onchange="ppgChannelSelect(this)">x100
+				</label>
+			</div>
+			<br>
+			<div>
+				G-sensor Channel
+				<label class="radio">
+					<input type="radio" name="gsensorRadios" id="gsensorRadios1" value="0" data-toggle="radio" onchange="gsensorChannelSelect(this)" checked>X
+				</label>
+				<label class="radio">
+					<input type="radio" name="gsensorRadios" id="gsensorRadios2" value="1" data-toggle="radio" onchange="gsensorChannelSelect(this)">Y
+			 	</label>
+				<label class="radio">
+					<input type="radio" name="gsensorRadios" id="gsensorRadios3" value="2" data-toggle="radio" onchange="gsensorChannelSelect(this)">Z
+				</label>
+			</div>
 		</div>
 
-		<script>
-			var socket = io();
-			socket.on('sensor_data', function (data) {
-				var json = JSON.parse(data);
-				document.getElementById("t_mps").innerHTML = json.speed;
-			});
-		</script>
+		<div id="area-chart">
+			<canvas id="canvas1" height="150" width="800"></canvas><br>
+			<canvas id="canvas2" height="150" width="800"></canvas><br>
+			<canvas id="canvas3" height="150" width="800"></canvas><br>
+			<canvas id="canvas4" height="150" width="800"></canvas><br>
+			<script>
+				var timer;
+				var ppgChannel = 0, gsensorChannel = 0;
+
+				var chartData1 = {
+					labels : [],
+					datasets : [
+						{
+							label: "速度",
+							fill: false,
+							spanGaps: true,
+							backgroundColor: "rgba(75,192,192,0.4)",
+							borderColor: "rgba(75,192,192,1)",
+							pointRadius: 0,
+							data : []
+						}
+					]
+				}
+				var chartData2 = {
+					labels : [],
+					datasets : [
+						{
+							label: "IR位置角度",
+							fill: false,
+							backgroundColor: "rgba(75,192,192,0.4)",
+							borderColor: "rgba(75,192,192,1)",
+							pointRadius: 0,
+							data : []
+						}
+					]
+				}
+				var chartData3 = {
+					labels : [],
+					datasets : [
+						{
+							label: "PPG",
+							fill: false,
+							backgroundColor: "rgba(75,192,192,0.4)",
+							borderColor: "rgba(75,192,192,1)",
+							pointRadius: 0,
+							data : []
+						}
+					]
+				}
+				var chartData4 = {
+					labels : [],
+					datasets : [
+						{
+							label: "G-sensor",
+							fill: false,
+							backgroundColor: "rgba(75,192,192,0.4)",
+							borderColor: "rgba(75,192,192,1)",
+							pointRadius: 0,
+							data : []
+						}
+					]
+				}
+
+				for (var i = 0; i <= 150; i++) {
+					chartData1.labels.push('');
+					chartData1.datasets[0].data.push(null);
+					chartData2.labels.push('');
+					chartData2.datasets[0].data.push(null);
+					chartData3.labels.push('');
+					chartData3.datasets[0].data.push(null);
+					chartData4.labels.push('');
+					chartData4.datasets[0].data.push(null);
+				}
+
+				var ctx1 = document.getElementById("canvas1").getContext("2d");
+				var ctx2 = document.getElementById("canvas2").getContext("2d");
+				var ctx3 = document.getElementById("canvas3").getContext("2d");
+				var ctx4 = document.getElementById("canvas4").getContext("2d");
+
+				Chart.defaults.global.defaultFontSize = 14;
+
+				var Chart1 = new Chart(ctx1, {
+					type: "line",
+					data: chartData1,
+					options: {
+						animation: false,
+						scales: {
+							yAxes: [{
+								ticks: {
+									max: 40,
+									min: 0,
+									stepSize: 5
+								}
+							}]
+						}
+					}
+				});
+				var Chart2 = new Chart(ctx2, {
+					type: "line",
+					data: chartData2,
+					options: {
+						animation: false,
+						scales: {
+							yAxes: [{
+								ticks: {
+									max: 135,
+									min: 0,
+									stepSize: 22.5
+								}
+							}]
+						}
+					}
+				});
+				var Chart3 = new Chart(ctx3, {
+					type: "line",
+					data: chartData3,
+					options: {
+						animation: false
+					}
+				});
+				var Chart4 = new Chart(ctx4, {
+					type: "line",
+					data: chartData4,
+					options: {
+						animation: false
+					}
+				});
+
+				var socket = io();
+				var sensorData;
+				socket.on('sensor_data', function (data) {
+					sensorData = JSON.parse(data);
+					if(!timer) {
+						timer = setInterval(updateData, 33);
+					}
+				});
+
+				function updateData () {
+					if(sensorData.training) {
+						document.getElementById("state").innerHTML = "訓練中";
+						document.getElementById("state").style.color = "#00BB00";
+					} else {
+						document.getElementById("state").innerHTML = "停止中";
+						document.getElementById("state").style.color = "#FF3300";
+					}
+
+					document.getElementById("t_mpm").innerHTML = sensorData.speed;
+
+					document.getElementById("p_time").innerHTML = Math.floor((sensorData.timestamp - sensorData.start_time) / 1000 / 60);
+					document.getElementById("t_time").innerHTML = Math.floor((sensorData.end_time - sensorData.start_time) / 1000 / 60);
+
+					document.getElementById("ir0").innerHTML = sensorData.IR_total[0];
+					document.getElementById("ir1").innerHTML = sensorData.IR_total[1];
+					document.getElementById("ir2").innerHTML = sensorData.IR_total[2];
+					document.getElementById("ir3").innerHTML = sensorData.IR_total[3];
+					document.getElementById("ir_other").innerHTML = sensorData.IR_total[4];
+
+					chartData1.datasets[0].data.push(sensorData.speed);
+					chartData1.datasets[0].data.shift();
+
+					var ir_value = null;
+					var plus = false;
+					if(sensorData.IR[0] == 0){
+						ir_value=0;
+						if(sensorData.IR[1] == 0){
+							ir_value += 22.5;
+							plus = true;
+						}
+					}
+					if(sensorData.IR[1] == 0 && !plus){
+						ir_value = 45;
+						if(sensorData.IR[2] == 0){
+							ir_value += 22.5;
+							plus = true;
+						}
+					}
+					if(sensorData.IR[2] == 0 && !plus){
+						ir_value = 90;
+						if(sensorData.IR[3] == 0){
+							ir_value += 22.5;
+							plus = true;
+						}
+					}
+					if(sensorData.IR[3] == 0 && !plus){
+						ir_value = 135;
+					}
+					chartData2.datasets[0].data.push(ir_value);
+					chartData2.datasets[0].data.shift();
+
+					var ppg_value = null;
+					if(ppgChannel == 0) {
+						ppg_value = sensorData.ppg['x1'];
+					} else if (ppgChannel == 1) {
+						ppg_value = sensorData.ppg['x10'];
+					} else if (ppgChannel == 2) {
+						ppg_value = sensorData.ppg['x100'];
+					}
+					chartData3.datasets[0].data.push(ppg_value);
+					chartData3.datasets[0].data.shift();
+
+					var gsensor_value = null;
+					if(gsensorChannel == 0) {
+						gsensor_value = sensorData.g_sensor['x'];
+					} else if (gsensorChannel == 1) {
+						gsensor_value = sensorData.g_sensor['y'];
+					} else if (gsensorChannel == 2) {
+						gsensor_value = sensorData.g_sensor['z'];
+					}
+					chartData4.datasets[0].data.push(gsensor_value);
+					chartData4.datasets[0].data.shift();
+
+					Chart1.update();
+					Chart2.update();
+					Chart3.update();
+					Chart4.update();
+				}
+
+				function ppgChannelSelect (s) {
+					ppgChannel = s.value;
+					for (var i = 0; i <= 150; i++) {
+						chartData3.datasets[0].data[i] = null;
+					}
+				}
+
+				function gsensorChannelSelect (s) {
+					gsensorChannel = s.value;
+					for (var i = 0; i <= 150; i++) {
+						chartData4.datasets[0].data[i] = null;
+					}
+				}
+			</script>
+		</div>
 	</body>
 </html>

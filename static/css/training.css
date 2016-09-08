@@ -1,0 +1,23 @@
+#area {
+	width: 60%;
+	height: 100%;
+	position: absolute;
+	left: 50%;
+	margin: 150px 0 0 -30%;
+	font-family: "Yu Gothic", "Microsoft JhengHei", Meiryo, simhei;
+	font-weight: bold;
+}
+#container-input {
+	width: 60%;
+	height: 100%;
+	position: absolute;
+	left: 25%;
+}
+.alert {
+	width: 98%;
+	float: left;
+	margin: -25px 0 0 20px;
+}
+.form-control {
+	margin: -5px;
+}

@@ -10,7 +10,7 @@ var sensor = require('./c8051sensor');
 var ppgSensor = require('./ppgsensor');
 
 var IR = [1, 1, 1, 1];
-var IR_total = [0, 0, 0, 0];
+var IR_total = [0, 0, 0, 0, 0];
 var speedFeedback;
 var g_sensor = {
 	"x": 0,
@@ -22,8 +22,8 @@ var ppg = {
 	"x10": 0,
 	"x100": 0
 };
-var startTime;
-var endTime;
+var startTime = 0;
+var endTime = 0;
 var currentSpeed = 0;
 var trainingParams = {
 	"acceleration": 0,
@@ -33,6 +33,7 @@ var trainingParams = {
 	"inTraining": false
 };
 var timer;
+var loopPerSecond = 10;
 
 motor.setSpeed(0, function (err) {
 	if(err) console.error(err);
@@ -54,6 +55,9 @@ setInterval(function () {
 		}
 		if(IR[3] == 0) {
 			IR_total[3]++;
+		}
+		if(IR[0] == 1 && IR[1] == 1 && IR[2] == 1 &&IR[3] == 1) {
+			IR_total[4]++;
 		}
 	}
 }, 100);
@@ -81,10 +85,13 @@ setInterval(function () {
 		"IR_total": IR_total,
 		"g_sensor": g_sensor,
 		"ppg": ppg,
+		"training": trainingParams.inTraining;
+		"start_time:": startTime,
+		"end_time": endTime,
 		"timestamp": Date.now()
 	};
 	io.emit('sensor_data', JSON.stringify(json));
-}, 10);
+}, 15);
 
 function trainingLoop () {
 	if(Date.now() >= endTime) {
@@ -95,14 +102,14 @@ function trainingLoop () {
 			function() { return i < Math.abs(currentSpeed / trainingParams.deceleration); },
 			function(callback) {
 				i++;
-				currentSpeed -= trainingParams.deceleration;
+				currentSpeed -= trainingParams.deceleration / loopPerSecond;
 				motor.setSpeed(currentSpeed, function (err) {
 					if(err) {
 						callback(err);
 					} else {
 						setTimeout(function () {
 							callback(null, i);
-						}, 200);
+						}, 1000 / loopPerSecond);
 					}
 				});
 			},
@@ -116,6 +123,7 @@ function trainingLoop () {
 						}
 					});
 				}
+				io.emit('training_state_update', '');
 				trainingParams.inTraining = false;
 			}
 		);
@@ -125,7 +133,7 @@ function trainingLoop () {
 				if((currentSpeed - trainingParams.minspeed) < trainingParams.deceleration) {
 					currentSpeed = trainingParams.minspeed;
 				} else {
-					currentSpeed -= trainingParams.deceleration;
+					currentSpeed -= trainingParams.deceleration / loopPerSecond;
 				}
 				motor.setSpeed(currentSpeed, function (err) {
 					if(err) console.error(err);
@@ -136,7 +144,7 @@ function trainingLoop () {
 				if((trainingParams.maxspeed - currentSpeed) < trainingParams.acceleration) {
 					currentSpeed = trainingParams.maxspeed;
 				} else {
-					currentSpeed += trainingParams.acceleration;
+					currentSpeed += trainingParams.acceleration / loopPerSecond;
 				}
 				motor.setSpeed(currentSpeed, function (err) {
 					if(err) console.error(err);
@@ -155,30 +163,76 @@ app.use(function (req, res, next) {
 	next();
 });
 
+app.get('/trainingParams', function (request, response) {
+	response.contentType('application/json');
+	response.send(JSON.stringify(json));
+});
+
 app.get('/training_stop', function (request, response) {
 	if(trainingParams.inTraining) {
-		trainingParams.inTraining = false;
 		clearInterval(timer);
+
+		var i = 0;
+		async.whilst(
+			function() { return i < Math.abs(currentSpeed / trainingParams.deceleration); },
+			function(callback) {
+				i++;
+				currentSpeed -= trainingParams.deceleration / loopPerSecond;
+				motor.setSpeed(currentSpeed, function (err) {
+					if(err) {
+						callback(err);
+					} else {
+						setTimeout(function () {
+							callback(null, i);
+						}, 1000 / loopPerSecond);
+					}
+				});
+			},
+			function (err, n) {
+				if(err) {
+					console.error(err);
+				} else {
+					motor.setSpeed(0, function (err) {
+						if(err) {
+							console.error(err);
+						}
+					});
+				}
+				io.emit('training_state_update', '');
+				trainingParams.inTraining = false;
+			}
+		);
 	}
-	motor.setSpeed(0, function (err) {
-		if(err) console.error(err);
-	});
+	response.end();
 });
 
 app.post('/training_init', function (request, response) {
 	var time = parseInt(request.body.time);
-	trainingParams.acceleration = parseFloat(request.body.acceleration) / 5;
-	trainingParams.deceleration = parseFloat(request.body.deceleration) / 5;
+	trainingParams.acceleration = parseFloat(request.body.acceleration);
+	trainingParams.deceleration = parseFloat(request.body.deceleration);
 	trainingParams.maxspeed = parseFloat(request.body.maxspeed);
 	trainingParams.minspeed = parseFloat(request.body.minspeed);
 
-	if(trainingParams.inTraining) {
-
+	if(!acceleration || acceleration <= 0) {
+		response.send('failed');
+	} else if (!deceleration || deceleration <= 0) {
+		response.send('failed');
+	} else if (!maxspeed || maxspeed <= 0) {
+		response.send('failed');
+	} else if (!minspeed || minspeed <= 0) {
+		response.send('failed');
+	} else if (!time || time <= 0) {
+		response.send('failed');
+	} else if (maxspeed < minspeed) {
+		response.send('failed');
+	} else if(trainingParams.inTraining) {
+		response.send('failed');
 	} else {
-		startTime = Date.now();
+		io.emit('training_state_update', '');
 		trainingParams.inTraining = true;
+		startTime = Date.now();
 		endTime = time * 60 * 1000 + startTime;
-		IR_total = [0, 0, 0, 0];
+		IR_total = [0, 0, 0, 0, 0];
 		currentSpeed = 0;
 
 		var i = 0;
@@ -186,14 +240,14 @@ app.post('/training_init', function (request, response) {
 			function() { return (i < Math.abs(trainingParams.maxspeed / trainingParams.acceleration)) && trainingParams.inTraining; },
 			function(callback) {
 				i++;
-				currentSpeed += trainingParams.acceleration;
+				currentSpeed += trainingParams.acceleration / loopPerSecond;
 				motor.setSpeed(currentSpeed, function (err) {
 					if(err) {
 						callback(err);
 					} else {
 						setTimeout(function () {
 							callback(null);
-						}, 200);
+						}, 1000 / loopPerSecond);
 					}
 				});
 			},
@@ -205,12 +259,13 @@ app.post('/training_init', function (request, response) {
 						if(err) {
 							console.error(err);
 						} else {
-							timer = setInterval(trainingLoop, 200);
+							timer = setInterval(trainingLoop, 1000 / loopPerSecond);
 						}
 					});
 				}
 			}
 		);
+		response.end();
 	}
 });
 
