@@ -11,7 +11,7 @@ var ppgSensor = require('./ppgsensor');
 
 var IR = [1, 1, 1, 1];
 var IR_total = [0, 0, 0, 0, 0];
-var speedFeedback;
+var speedFeedback = 0;
 var g_sensor = {
 	"x": 0,
 	"y": 0,
@@ -45,20 +45,22 @@ setInterval(function () {
 	if(Object.keys(data).length > 0) {
 		IR = data.IR;
 		speedFeedback = data.speed;
-		if(IR[0] == 0) {
-			IR_total[0]++;
-		}
-		if(IR[1] == 0) {
-			IR_total[1]++;
-		}
-		if(IR[2] == 0) {
-			IR_total[2]++;
-		}
-		if(IR[3] == 0) {
-			IR_total[3]++;
-		}
-		if(IR[0] == 1 && IR[1] == 1 && IR[2] == 1 &&IR[3] == 1) {
-			IR_total[4]++;
+		if(trainingParams.inTraining) {
+			if(IR[0] == 0) {
+				IR_total[0]++;
+			}
+			if(IR[1] == 0) {
+				IR_total[1]++;
+			}
+			if(IR[2] == 0) {
+				IR_total[2]++;
+			}
+			if(IR[3] == 0) {
+				IR_total[3]++;
+			}
+			if(IR[0] == 1 && IR[1] == 1 && IR[2] == 1 &&IR[3] == 1) {
+				IR_total[4]++;
+			}
 		}
 	}
 }, 100);
@@ -100,7 +102,7 @@ function trainingLoop () {
 
 		var i = 0;
 		async.whilst(
-			function() { return i < Math.abs(currentSpeed / trainingParams.deceleration); },
+			function() { return i < (currentSpeed / (trainingParams.deceleration / loopPerSecond)); },
 			function(callback) {
 				i++;
 				currentSpeed -= trainingParams.deceleration / loopPerSecond;
@@ -131,7 +133,7 @@ function trainingLoop () {
 	} else {
 		if(IR[0] == 0 || (IR[1] == 0 && IR[2] == 1)) {
 			if(currentSpeed > trainingParams.minspeed) {
-				if((currentSpeed - trainingParams.minspeed) < trainingParams.deceleration) {
+				if((currentSpeed - trainingParams.deceleration / loopPerSecond) < trainingParams.minspeed) {
 					currentSpeed = trainingParams.minspeed;
 				} else {
 					currentSpeed -= trainingParams.deceleration / loopPerSecond;
@@ -142,7 +144,7 @@ function trainingLoop () {
 			}
 		} else if(IR[3] == 0) {
 			if(currentSpeed < trainingParams.maxspeed) {
-				if((trainingParams.maxspeed - currentSpeed) < trainingParams.acceleration) {
+				if((currentSpeed + trainingParams.acceleration / loopPerSecond) > trainingParams.maxspeed) {
 					currentSpeed = trainingParams.maxspeed;
 				} else {
 					currentSpeed += trainingParams.acceleration / loopPerSecond;
@@ -183,7 +185,7 @@ app.post('/training_stop', function (request, response) {
 
 		var i = 0;
 		async.whilst(
-			function() { return i < Math.abs(currentSpeed / trainingParams.deceleration); },
+			function() { return i < (currentSpeed / (trainingParams.deceleration / loopPerSecond)); },
 			function(callback) {
 				i++;
 				currentSpeed -= trainingParams.deceleration / loopPerSecond;
@@ -230,6 +232,8 @@ app.post('/training_init', function (request, response) {
 		response.send('failed');
 	} else if (!minspeed || minspeed <= 0) {
 		response.send('failed');
+	} else if (maxspeed > 40) {
+		response.send('failed');
 	} else if (!time || time <= 0) {
 		response.send('failed');
 	} else if (maxspeed < minspeed) {
@@ -237,13 +241,13 @@ app.post('/training_init', function (request, response) {
 	} else if(trainingParams.inTraining) {
 		response.send('failed');
 	} else {
-		io.emit('training_state_update', '');
 		trainingParams.inTraining = true;
 		trainingParams.acceleration = acceleration;
 		trainingParams.deceleration = deceleration;
 		trainingParams.maxspeed = maxspeed;
 		trainingParams.minspeed = minspeed;
 		trainingParams.time = time;
+		io.emit('training_state_update', '');
 		startTime = Date.now();
 		endTime = trainingParams.time * 60 * 1000 + startTime;
 		IR_total = [0, 0, 0, 0, 0];
@@ -251,7 +255,7 @@ app.post('/training_init', function (request, response) {
 
 		var i = 0;
 		async.whilst(
-			function() { return (i < Math.abs(trainingParams.maxspeed / trainingParams.acceleration)) && trainingParams.inTraining; },
+			function() { return (i < trainingParams.maxspeed / (trainingParams.acceleration / loopPerSecond)) && trainingParams.inTraining; },
 			function(callback) {
 				i++;
 				currentSpeed += trainingParams.acceleration / loopPerSecond;
