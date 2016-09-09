@@ -38,10 +38,10 @@
 				<div class="row">
 					<div class="col-sm-1"></div>
 					<div class="col-sm-6">
-						<div class="col-sm-5">
+						<div class="col-sm-4">
 							加速度:
 						</div>
-						<div class="col-sm-5">
+						<div class="col-sm-6">
 							<div class="form-group">
 								<input type="text" value="" placeholder="" id="acceleration" class="form-control">
 							</div>
@@ -55,10 +55,10 @@
 				<div class="row">
 					<div class="col-sm-1"></div>
 					<div class="col-sm-6">
-						<div class="col-sm-5">
+						<div class="col-sm-4">
 							減速度:
 						</div>
-						<div class="col-sm-5">
+						<div class="col-sm-6">
 							<div class="form-group">
 								<input type="text" value="" placeholder="" id="deceleration" class="form-control">
 							</div>
@@ -72,10 +72,10 @@
 				<div class="row">
 					<div class="col-sm-1"></div>
 					<div class="col-sm-6">
-						<div class="col-sm-5">
+						<div class="col-sm-4">
 							最高速度:
 						</div>
-						<div class="col-sm-5">
+						<div class="col-sm-6">
 							<div class="form-group">
 								<input type="text" value="" placeholder="" id="maxspeed" class="form-control">
 							</div>
@@ -89,10 +89,10 @@
 				<div class="row">
 					<div class="col-sm-1"></div>
 					<div class="col-sm-6">
-						<div class="col-sm-5">
+						<div class="col-sm-4">
 							最低速度:
 						</div>
-						<div class="col-sm-5">
+						<div class="col-sm-6">
 							<div class="form-group">
 								<input type="text" value="" placeholder="" id="minspeed" class="form-control">
 							</div>
@@ -106,10 +106,10 @@
 				<div class="row">
 					<div class="col-sm-1"></div>
 					<div class="col-sm-6">
-						<div class="col-sm-5">
+						<div class="col-sm-4">
 							訓練時間:
 						</div>
-						<div class="col-sm-5">
+						<div class="col-sm-6">
 							<div class="form-group">
 								<input type="text" value="" placeholder="" id="time" class="form-control">
 							</div>
@@ -158,12 +158,6 @@
 							document.getElementById("start").className = "btn btn-block btn-lg btn-primary";
 							document.getElementById("stop").className = "btn btn-block btn-lg btn-danger disabled";
 
-							document.getElementById("acceleration").value = "";
-							document.getElementById("deceleration").value = "";
-							document.getElementById("maxspeed").value = "";
-							document.getElementById("minspeed").value = "";
-							document.getElementById("time").value = "";
-
 							document.getElementById("acceleration").disabled = "";
 							document.getElementById("deceleration").disabled = "";
 							document.getElementById("maxspeed").disabled = "";
@@ -204,6 +198,8 @@
 					showWarringMessage("減速度須大於0!");
 				} else if (!maxspeed || maxspeed <= 0) {
 					showWarringMessage("最高速度須大於0!");
+				} else if (maxspeed > 40) {
+					showWarringMessage("最高速度不得大於40!");
 				} else if (!minspeed || minspeed <= 0) {
 					showWarringMessage("最低速度須大於0!");
 				} else if (!time || time <= 0) {

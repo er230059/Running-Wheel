@@ -22,14 +22,15 @@ var ppg = {
 	"x10": 0,
 	"x100": 0
 };
+var currentSpeed = 0;
 var startTime = 0;
 var endTime = 0;
-var currentSpeed = 0;
 var trainingParams = {
 	"acceleration": 0,
 	"deceleration": 0,
 	"maxspeed": 0,
 	"minspeed": 0,
+	"time": 0,
 	"inTraining": false
 };
 var timer;
@@ -85,8 +86,8 @@ setInterval(function () {
 		"IR_total": IR_total,
 		"g_sensor": g_sensor,
 		"ppg": ppg,
-		"training": trainingParams.inTraining;
-		"start_time:": startTime,
+		"training": trainingParams.inTraining,
+		"start_time": startTime,
 		"end_time": endTime,
 		"timestamp": Date.now()
 	};
@@ -164,6 +165,14 @@ app.use(function (req, res, next) {
 });
 
 app.get('/trainingParams', function (request, response) {
+	var json = {
+		"acceleration": trainingParams.acceleration,
+		"deceleration": trainingParams.deceleration,
+		"maxspeed": trainingParams.maxspeed,
+		"minspeed": trainingParams.minspeed,
+		"time":  trainingParams.time,
+		"training": trainingParams.inTraining
+	};
 	response.contentType('application/json');
 	response.send(JSON.stringify(json));
 });
@@ -208,10 +217,10 @@ app.post('/training_stop', function (request, response) {
 
 app.post('/training_init', function (request, response) {
 	var time = parseInt(request.body.time);
-	trainingParams.acceleration = parseFloat(request.body.acceleration);
-	trainingParams.deceleration = parseFloat(request.body.deceleration);
-	trainingParams.maxspeed = parseFloat(request.body.maxspeed);
-	trainingParams.minspeed = parseFloat(request.body.minspeed);
+	var acceleration = parseFloat(request.body.acceleration);
+	var deceleration = parseFloat(request.body.deceleration);
+	var maxspeed = parseFloat(request.body.maxspeed);
+	var minspeed = parseFloat(request.body.minspeed);
 
 	if(!acceleration || acceleration <= 0) {
 		response.send('failed');
@@ -230,8 +239,13 @@ app.post('/training_init', function (request, response) {
 	} else {
 		io.emit('training_state_update', '');
 		trainingParams.inTraining = true;
+		trainingParams.acceleration = acceleration;
+		trainingParams.deceleration = deceleration;
+		trainingParams.maxspeed = maxspeed;
+		trainingParams.minspeed = minspeed;
+		trainingParams.time = time;
 		startTime = Date.now();
-		endTime = time * 60 * 1000 + startTime;
+		endTime = trainingParams.time * 60 * 1000 + startTime;
 		IR_total = [0, 0, 0, 0, 0];
 		currentSpeed = 0;
 

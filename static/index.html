@@ -258,8 +258,10 @@
 
 					document.getElementById("t_mpm").innerHTML = sensorData.speed;
 
-					document.getElementById("p_time").innerHTML = Math.floor((sensorData.timestamp - sensorData.start_time) / 1000 / 60);
-					document.getElementById("t_time").innerHTML = Math.floor((sensorData.end_time - sensorData.start_time) / 1000 / 60);
+					if(sensorData.start_time) {
+						document.getElementById("p_time").innerHTML = Math.floor((sensorData.timestamp - sensorData.start_time) / 1000 / 60);
+						document.getElementById("t_time").innerHTML = Math.floor((sensorData.end_time - sensorData.start_time) / 1000 / 60);
+					}
 
 					document.getElementById("ir0").innerHTML = sensorData.IR_total[0];
 					document.getElementById("ir1").innerHTML = sensorData.IR_total[1];
