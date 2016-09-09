@@ -153,7 +153,7 @@
 							document.getElementById("minspeed").disabled = "disabled";
 							document.getElementById("time").disabled = "disabled";
 
-							showInfoMessage("滾輪運作中!");
+							showInfoMessage("運作中!");
 						} else {
 							document.getElementById("start").className = "btn btn-block btn-lg btn-primary";
 							document.getElementById("stop").className = "btn btn-block btn-lg btn-danger disabled";
@@ -164,7 +164,7 @@
 							document.getElementById("minspeed").disabled = "";
 							document.getElementById("time").disabled = "";
 
-							showInfoMessage("滾輪已停止!");
+							showInfoMessage("已停止!");
 						}
 					}
 				};
@@ -174,7 +174,8 @@
 
 			function showInfoMessage (msg) {
 				document.getElementById("area-alert").innerHTML = "<div class=\"alert alert-info\">" +
-					"<a href=\"#\" class=\"close\" data-dismiss=\"alert\">&times;</a> " + msg +
+					"<a href=\"#\" class=\"close\" data-dismiss=\"alert\">&times;</a> " +
+					"<strong>狀態: </strong>" + msg +
 					"</div>"
 			}
 
