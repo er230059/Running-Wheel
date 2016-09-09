@@ -1,0 +1,19 @@
+canvas {
+	pointer-events: none;
+}
+#menu {
+	background-color: #FFFFFF;
+	height: 800px;
+	width: 15%;
+	float: left;
+	margin: -10px 0 0 20px;
+}
+#area-chart {
+	background-color: #FFFFFF;
+	height: 800px;
+	width: 80%;
+	float: left;
+}
+#state {
+	font-weight: bold;
+}
