@@ -182,37 +182,14 @@ app.get('/trainingParams', function (request, response) {
 app.post('/training_stop', function (request, response) {
 	if(trainingParams.inTraining) {
 		clearInterval(timer);
+		trainingParams.inTraining = false;
 
-		var i = 0;
-		async.whilst(
-			function() { return i < (currentSpeed / (trainingParams.deceleration / loopPerSecond)); },
-			function(callback) {
-				i++;
-				currentSpeed -= trainingParams.deceleration / loopPerSecond;
-				motor.setSpeed(currentSpeed, function (err) {
-					if(err) {
-						callback(err);
-					} else {
-						setTimeout(function () {
-							callback(null, i);
-						}, 1000 / loopPerSecond);
-					}
-				});
-			},
-			function (err, n) {
-				if(err) {
-					console.error(err);
-				} else {
-					motor.setSpeed(0, function (err) {
-						if(err) {
-							console.error(err);
-						}
-					});
-				}
-				io.emit('training_state_update', '');
-				trainingParams.inTraining = false;
+		motor.setSpeed(0, function (err) {
+			if(err) {
+				console.error(err);
 			}
-		);
+			io.emit('training_state_update', '');
+		});
 	}
 	response.end();
 });

@@ -31,7 +31,7 @@
 			</nav>
 		</div>
 
-<div id="menu">
+		<div id="menu">
 			<table border="0" align="left">
 				<tr>
 					<td>狀態:&nbsp;</td>
@@ -126,7 +126,7 @@
 					labels : [],
 					datasets : [
 						{
-							label: "速度",
+							label: "速度(x1000)",
 							fill: false,
 							backgroundColor: "rgba(0,100,0,0.4)",
 							borderColor: "rgba(0,100,0,1)",
@@ -134,7 +134,7 @@
 							data : []
 						},
 						{
-							label: "IR角度位置",
+							label: "IR角度位置(x300)",
 							fill: false,
 							backgroundColor: "rgba(52,152,219,0.4)",
 							borderColor: "rgba(52,152,219,1)",
@@ -306,10 +306,10 @@
 						chartData1.datasets[0].data.shift();
 					}
 
-					chartData2.datasets[0].data.push(sensorData.speed);
+					chartData2.datasets[0].data.push(sensorData.speed * 1000);
 					chartData2.datasets[0].data.shift();
 
-					chartData2.datasets[1].data.push(ir_value);
+					chartData2.datasets[1].data.push(ir_value * 300);
 					chartData2.datasets[1].data.shift();
 
 					chartData2.datasets[2].data.push(sensorData.ppg['x1']);

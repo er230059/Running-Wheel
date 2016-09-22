@@ -225,6 +225,9 @@
 			}
 
 			function stop () {
+				document.getElementById("stop").className = "btn btn-block btn-lg btn-danger disabled";
+				showInfoMessage("停止中!");
+
 				var xhttp = new XMLHttpRequest();
 				xhttp.open("POST", "/training_stop", true);
 				xhttp.send();
