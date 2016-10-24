@@ -23,7 +23,7 @@ var ppg = {
 	"x100": 0
 };
 var currentSpeed = 0;
-var startTime = 0;
+var elapsed_time = 0;
 var endTime = 0;
 var trainingParams = {
 	"acceleration": 0,
@@ -89,9 +89,8 @@ setInterval(function () {
 		"g_sensor": g_sensor,
 		"ppg": ppg,
 		"training": trainingParams.inTraining,
-		"start_time": startTime,
-		"end_time": endTime,
-		"timestamp": Date.now()
+		"elapsed_time": elapsed_time,
+		"total_time": trainingParams.time
 	};
 	io.emit('sensor_data', JSON.stringify(json));
 }, 15);
@@ -155,16 +154,19 @@ function trainingLoop () {
 			}
 		}
 	}
+
+	elapsed_time = Math.floor(Math.abs((endTime - Date.now()) / 1000 / 60));
 }
 
 app.use(bodyParser.json());
-app.use(express.static(__dirname + '/static'));
 
 app.use(function (req, res, next) {
 	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 	console.log(ip + ': '+ req.url);
 	next();
 });
+
+app.use(express.static(__dirname + '/static'));
 
 app.get('/trainingParams', function (request, response) {
 	var json = {
@@ -225,8 +227,7 @@ app.post('/training_init', function (request, response) {
 		trainingParams.minspeed = minspeed;
 		trainingParams.time = time;
 		io.emit('training_state_update', '');
-		startTime = Date.now();
-		endTime = trainingParams.time * 60 * 1000 + startTime;
+		endTime = trainingParams.time * 60 * 1000 + Date.now();
 		IR_total = [0, 0, 0, 0, 0];
 		currentSpeed = 0;
 

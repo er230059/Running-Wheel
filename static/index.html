@@ -51,7 +51,7 @@
 				</tr>
 				<tr>
 					<td>已訓練時間:&nbsp;</td>
-					<td><span id = "p_time">0</span>&nbsp;min(s)</td>
+					<td><span id = "e_time">0</span>&nbsp;min(s)</td>
 				</tr>
 				<tr>
 					<td>總訓練時間:&nbsp;</td>
@@ -259,8 +259,8 @@
 					document.getElementById("t_mpm").innerHTML = sensorData.speed;
 
 					if(sensorData.start_time) {
-						document.getElementById("p_time").innerHTML = Math.floor((sensorData.timestamp - sensorData.start_time) / 1000 / 60);
-						document.getElementById("t_time").innerHTML = Math.floor((sensorData.end_time - sensorData.start_time) / 1000 / 60);
+						document.getElementById("e_time").innerHTML = sensorData.elapsed_time;
+						document.getElementById("t_time").innerHTML = sensorData.total_time;
 					}
 
 					document.getElementById("ir0").innerHTML = sensorData.IR_total[0];
