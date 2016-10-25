@@ -154,8 +154,7 @@ function trainingLoop () {
 			}
 		}
 	}
-
-	elapsed_time = Math.floor(Math.abs((endTime - Date.now()) / 1000 / 60));
+	elapsed_time = Math.floor(trainingParams.time - (endTime - Date.now()) / 1000 / 60);
 }
 
 app.use(bodyParser.json());
@@ -227,6 +226,7 @@ app.post('/training_init', function (request, response) {
 		trainingParams.minspeed = minspeed;
 		trainingParams.time = time;
 		io.emit('training_state_update', '');
+		elapsed_time = 0;
 		endTime = trainingParams.time * 60 * 1000 + Date.now();
 		IR_total = [0, 0, 0, 0, 0];
 		currentSpeed = 0;
