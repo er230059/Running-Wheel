@@ -1,4 +1,5 @@
 var async = require('async');
+var fs = require('fs');
 var http = require('http');
 var express = require('express');
 var app = express();
@@ -100,13 +101,13 @@ setInterval(function () {
 
 function trainingLoop () {
 	var recoedDataString = '';
-	recoedDataString += "Speed: " speedFeedback + "\n";
+	recoedDataString += "Speed: " + speedFeedback + "\n";
 	recoedDataString += "IR: " + IR[0] + " " + IR[1] + " " + IR[2] + " " + IR[3] + "\n";
 	recoedDataString += "IR_sum: " + IR_total[0] + " " + IR_total[1] + " " + IR_total[2] + " " + IR_total[3] + " " + IR_total[4] + "\n";
 	recoedDataString += "G-sensor: " + g_sensor["x"] + " " + g_sensor["y"] + " " + g_sensor["z"] + "\n";
 	recoedDataString += "PPG: " + ppg["x1"] + " " + ppg["x10"] + " " + ppg["x100"] + "\n";
 	recoedDataString += "Elapsed_seconds: " + Math.floor(trainingParams.time * 60 - (endTime - Date.now()) / 1000) + "\n\n";
-	fs.appendFileSync(recordDataPath, writeString);
+	fs.appendFileSync(recordDataPath, recoedDataString);
 
 	if(Date.now() >= endTime) {
 		clearInterval(timer);
