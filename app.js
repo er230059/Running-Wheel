@@ -34,7 +34,10 @@ var trainingParams = {
 	"inTraining": false
 };
 var timer;
-var loopPerSecond = 10;
+var loopPerSecond = 5;
+
+var recordDataPath = '';
+const recordDataFolder = '/media/SD';
 
 motor.setSpeed(0, function (err) {
 	if(err) console.error(err);
@@ -96,6 +99,15 @@ setInterval(function () {
 }, 15);
 
 function trainingLoop () {
+	var recoedDataString = '';
+	recoedDataString += "Speed: " speedFeedback + "\n";
+	recoedDataString += "IR: " + IR[0] + " " + IR[1] + " " + IR[2] + " " + IR[3] + "\n";
+	recoedDataString += "IR_sum: " + IR_total[0] + " " + IR_total[1] + " " + IR_total[2] + " " + IR_total[3] + " " + IR_total[4] + "\n";
+	recoedDataString += "G-sensor: " + g_sensor["x"] + " " + g_sensor["y"] + " " + g_sensor["z"] + "\n";
+	recoedDataString += "PPG: " + ppg["x1"] + " " + ppg["x10"] + " " + ppg["x100"] + "\n";
+	recoedDataString += "Elapsed_seconds: " + Math.floor(trainingParams.time * 60 - (endTime - Date.now()) / 1000) + "\n\n";
+	fs.appendFileSync(recordDataPath, writeString);
+
 	if(Date.now() >= endTime) {
 		clearInterval(timer);
 
@@ -230,6 +242,16 @@ app.post('/training_init', function (request, response) {
 		endTime = trainingParams.time * 60 * 1000 + Date.now();
 		IR_total = [0, 0, 0, 0, 0];
 		currentSpeed = 0;
+
+		var date = new Date();
+		var year = date.getFullYear();
+		var month = date.getMonth() + 1;
+		var day = date.getDate();
+		var hour = ('0' + date.getHours()).slice(-2);
+		var minute = ('0' + date.getMinutes()).slice(-2);
+		var second = ('0' + date.getSeconds()).slice(-2);
+		var dateString = year + '-' + month + '-' + day + '_' + hour + minute + second;
+		recordDataPath = recordDataFolder + '/record_data.' + dateString + '.txt';
 
 		var i = 0;
 		async.whilst(
