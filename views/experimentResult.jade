@@ -1,0 +1,31 @@
+doctype html
+html
+	head
+		meta(charset='UTF-8')
+		link(rel='stylesheet', type='text/css', href='css/experimentResult.css')
+		link(rel='stylesheet', type='text/css', href='css/vendor/bootstrap/css/bootstrap.min.css')
+		link(rel='stylesheet', type='text/css', href='css/flat-ui.min.css')
+		title Experiment Result
+	body
+		script(src='js/vendor/jquery.min.js')
+		script(src='js/flat-ui.min.js')
+		script(src='js/application.js')
+		script(src='/socket.io/socket.io.js')
+		.col-xs-12
+			nav.navbar.navbar-inverse(role='navigation')
+				.navbar-header
+					button.navbar-toggle(type='button', data-toggle='collapse', data-target='#navbar-collapse-01')
+						span.sr-only Toggle navigation
+					a.navbar-brand(href='index.html') Running Wheel
+				#navbar-collapse-01.collapse.navbar-collapse
+					ul.nav.navbar-nav
+						li
+							a(href='training.html') Training Setting
+						li
+							a(href='smonitor.html') Special Monitor
+						li.active
+							a(href='#') Experiment Result
+		#menu
+			each val in files
+				a(href='/record_data/' + val,  target='_blank') #{val}
+				br

@@ -35,10 +35,10 @@ var trainingParams = {
 	"inTraining": false
 };
 var timer;
-var loopPerSecond = 5;
+var loopPerSecond = 10;
 
 var recordDataPath = '';
-const recordDataFolder = '/media/SD';
+const recordDataFolder = '/media/SD/';
 
 motor.setSpeed(0, function (err) {
 	if(err) console.error(err);
@@ -101,12 +101,12 @@ setInterval(function () {
 
 function trainingLoop () {
 	var recoedDataString = '';
-	recoedDataString += "Speed: " + speedFeedback + "\n";
-	recoedDataString += "IR: " + IR[0] + " " + IR[1] + " " + IR[2] + " " + IR[3] + "\n";
-	recoedDataString += "IR_sum: " + IR_total[0] + " " + IR_total[1] + " " + IR_total[2] + " " + IR_total[3] + " " + IR_total[4] + "\n";
-	recoedDataString += "G-sensor: " + g_sensor["x"] + " " + g_sensor["y"] + " " + g_sensor["z"] + "\n";
-	recoedDataString += "PPG: " + ppg["x1"] + " " + ppg["x10"] + " " + ppg["x100"] + "\n";
-	recoedDataString += "Elapsed_seconds: " + Math.floor(trainingParams.time * 60 - (endTime - Date.now()) / 1000) + "\n\n";
+	recoedDataString += "Speed: " + speedFeedback + "\r\n";
+	recoedDataString += "IR: " + IR[0] + " " + IR[1] + " " + IR[2] + " " + IR[3] + "\r\n";
+	recoedDataString += "IR_sum: " + IR_total[0] + " " + IR_total[1] + " " + IR_total[2] + " " + IR_total[3] + " " + IR_total[4] + "\r\n";
+	recoedDataString += "G-sensor: " + g_sensor["x"] + " " + g_sensor["y"] + " " + g_sensor["z"] + "\r\n";
+	recoedDataString += "PPG: " + ppg["x1"] + " " + ppg["x10"] + " " + ppg["x100"] + "\r\n";
+	recoedDataString += "Elapsed_seconds: " + (Math.floor((trainingParams.time * 60 - (endTime - Date.now()) / 1000) * 100) / 100) + "\r\n\r\n";
 	fs.appendFileSync(recordDataPath, recoedDataString);
 
 	if(Date.now() >= endTime) {
@@ -170,6 +170,9 @@ function trainingLoop () {
 	elapsed_time = Math.floor(trainingParams.time - (endTime - Date.now()) / 1000 / 60);
 }
 
+app.set('view engine', 'jade');
+app.set('views', __dirname + '/views');
+
 app.use(bodyParser.json());
 
 app.use(function (req, res, next) {
@@ -179,6 +182,18 @@ app.use(function (req, res, next) {
 });
 
 app.use(express.static(__dirname + '/static'));
+app.use('/record_data', express.static('/media/SD'));
+
+app.get('/experimentResult', function (req, res) {
+    fs.readdir(recordDataFolder, function (err, data) {
+        if(err) {
+            console.log(err);
+            res.status(500).end();
+        } else {
+            res.render('experimentResult', {'files': data});
+        }
+    });
+});
 
 app.get('/trainingParams', function (request, response) {
 	var json = {
@@ -232,6 +247,18 @@ app.post('/training_init', function (request, response) {
 	} else if(trainingParams.inTraining) {
 		response.send('failed');
 	} else {
+		var newFilename, filenameNumber = [];
+		var files = fs.readdirSync(recordDataFolder);
+		for(var i = 0; i < files.length; i++) {
+			filenameNumber.push(parseInt(files[i].split('.')[0]) || 0);
+		}
+		if((Math.max.apply(null, filenameNumber) + 1) > 0) {
+			newFilename = (Math.max.apply(null, filenameNumber) + 1).toString() + '.txt';
+		} else {
+			newFilename = '1.txt';
+		}
+		recordDataPath = recordDataFolder + newFilename;
+
 		trainingParams.inTraining = true;
 		trainingParams.acceleration = acceleration;
 		trainingParams.deceleration = deceleration;
@@ -243,16 +270,6 @@ app.post('/training_init', function (request, response) {
 		endTime = trainingParams.time * 60 * 1000 + Date.now();
 		IR_total = [0, 0, 0, 0, 0];
 		currentSpeed = 0;
-
-		var date = new Date();
-		var year = date.getFullYear();
-		var month = date.getMonth() + 1;
-		var day = date.getDate();
-		var hour = ('0' + date.getHours()).slice(-2);
-		var minute = ('0' + date.getMinutes()).slice(-2);
-		var second = ('0' + date.getSeconds()).slice(-2);
-		var dateString = year + '-' + month + '-' + day + '_' + hour + minute + second;
-		recordDataPath = recordDataFolder + '/record_data.' + dateString + '.txt';
 
 		var i = 0;
 		async.whilst(
