@@ -273,7 +273,7 @@ app.post('/training_init', function (request, response) {
 
 		var i = 0;
 		async.whilst(
-			function() { return (i < trainingParams.maxspeed / (trainingParams.acceleration / loopPerSecond)) && trainingParams.inTraining; },
+			function() { return (i < (trainingParams.maxspeed / 2) / (trainingParams.acceleration / loopPerSecond)) && trainingParams.inTraining; },
 			function(callback) {
 				i++;
 				currentSpeed += trainingParams.acceleration / loopPerSecond;
@@ -291,7 +291,7 @@ app.post('/training_init', function (request, response) {
 				if(err) {
 					console.error(err);
 				} else {
-					motor.setSpeed(trainingParams.maxspeed, function (err) {
+					motor.setSpeed(trainingParams.maxspeed / 2, function (err) {
 						if(err) {
 							console.error(err);
 						} else {
