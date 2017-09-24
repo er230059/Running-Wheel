@@ -182,7 +182,25 @@ app.use(function (req, res, next) {
 });
 
 app.use(express.static(__dirname + '/static'));
-app.use('/record_data', express.static('/media/SD'));
+app.use('/record_data', express.static(recordDataFolder));
+
+app.post('/deleteData', function (request, response) {
+	fs.readdir(recordDataFolder, function (err, files) {
+		if(err) {
+			console.error(err);
+		} else {
+			for (var i = 0; i < files.length; i++) {
+				var match = files[i].match(/.*.txt/);
+				if(match) {
+					fs.unlink(recordDataFolder + files[i], function (err) {
+						if(err) console.error(err);
+					});
+				}
+			}
+		}
+	});
+	response.end();
+});
 
 app.get('/experimentResult', function (req, res) {
     fs.readdir(recordDataFolder, function (err, data) {
@@ -271,11 +289,13 @@ app.post('/training_init', function (request, response) {
 		IR_total = [0, 0, 0, 0, 0];
 		currentSpeed = 0;
 
+		var initCompleted = false;
 		var i = 0;
 		async.whilst(
-			function() { return (i < (trainingParams.maxspeed / 2) / (trainingParams.acceleration / loopPerSecond)) && trainingParams.inTraining; },
+			function() { return !initCompleted && (i < trainingParams.maxspeed / (trainingParams.acceleration / loopPerSecond)) && trainingParams.inTraining; },
 			function(callback) {
 				i++;
+				if(IR[0] == 0 && currentSpeed >= trainingParams.minspeed) initCompleted = true;
 				currentSpeed += trainingParams.acceleration / loopPerSecond;
 				motor.setSpeed(currentSpeed, function (err) {
 					if(err) {
@@ -291,13 +311,7 @@ app.post('/training_init', function (request, response) {
 				if(err) {
 					console.error(err);
 				} else {
-					motor.setSpeed(trainingParams.maxspeed / 2, function (err) {
-						if(err) {
-							console.error(err);
-						} else {
-							timer = setInterval(trainingLoop, 1000 / loopPerSecond);
-						}
-					});
+					timer = setInterval(trainingLoop, 1000 / loopPerSecond);
 				}
 			}
 		);

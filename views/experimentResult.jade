@@ -11,6 +11,17 @@ html
 		script(src='js/flat-ui.min.js')
 		script(src='js/application.js')
 		script(src='/socket.io/socket.io.js')
+
+		script.
+			function delData () {
+				if (confirm("確認刪除所有資料?")) {
+					var xhttp = new XMLHttpRequest();
+					xhttp.open("POST", "/deleteData", true);
+					xhttp.send();
+					document.location.reload(true);
+				}
+			}
+
 		.col-xs-12
 			nav.navbar.navbar-inverse(role='navigation')
 				.navbar-header
@@ -26,6 +37,8 @@ html
 						li.active
 							a(href='#') Experiment Result
 		#menu
+			button(onclick='delData()') Delete all data
+			br
 			each val in files
 				a(href='/record_data/' + val,  target='_blank') #{val}
 				br
