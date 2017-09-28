@@ -109,7 +109,7 @@ function trainingLoop () {
 	recoedDataString += "Elapsed_seconds: " + (Math.floor((trainingParams.time * 60 - (endTime - Date.now()) / 1000) * 100) / 100) + "\r\n\r\n";
 	fs.appendFileSync(recordDataPath, recoedDataString);
 
-	if(Date.now() >= endTime) {
+	if(Date.now() >= endTime || !trainingParams.inTraining) {
 		clearInterval(timer);
 
 		var i = 0;
@@ -295,7 +295,7 @@ app.post('/training_init', function (request, response) {
 			function() { return !initCompleted && (i < trainingParams.maxspeed / (trainingParams.acceleration / loopPerSecond)) && trainingParams.inTraining; },
 			function(callback) {
 				i++;
-				if(IR[0] == 0 && currentSpeed >= trainingParams.minspeed) initCompleted = true;
+				if((IR[0] == 0 || (IR[1] == 0 && IR[2] == 1)) && currentSpeed >= trainingParams.minspeed) initCompleted = true;
 				currentSpeed += trainingParams.acceleration / loopPerSecond;
 				motor.setSpeed(currentSpeed, function (err) {
 					if(err) {
@@ -311,7 +311,7 @@ app.post('/training_init', function (request, response) {
 				if(err) {
 					console.error(err);
 				} else {
-					timer = setInterval(trainingLoop, 1000 / loopPerSecond);
+					if(trainingParams.inTraining) timer = setInterval(trainingLoop, 1000 / loopPerSecond);
 				}
 			}
 		);
