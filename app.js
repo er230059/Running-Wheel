@@ -143,7 +143,7 @@ function trainingLoop () {
 			}
 		);
 	} else {
-		if(IR[0] == 0 || (IR[1] == 0 && IR[2] == 1)) {
+		if(IR[0] == 0) {
 			if(currentSpeed > trainingParams.minspeed) {
 				if((currentSpeed - trainingParams.deceleration / loopPerSecond) < trainingParams.minspeed) {
 					currentSpeed = trainingParams.minspeed;
@@ -295,7 +295,7 @@ app.post('/training_init', function (request, response) {
 			function() { return !initCompleted && (i < trainingParams.maxspeed / (trainingParams.acceleration / loopPerSecond)) && trainingParams.inTraining; },
 			function(callback) {
 				i++;
-				if((IR[0] == 0 || (IR[1] == 0 && IR[2] == 1)) && currentSpeed >= trainingParams.minspeed) initCompleted = true;
+				if((IR[0] == 0) && currentSpeed >= trainingParams.minspeed) initCompleted = true;
 				currentSpeed += trainingParams.acceleration / loopPerSecond;
 				motor.setSpeed(currentSpeed, function (err) {
 					if(err) {
